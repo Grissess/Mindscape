@@ -47,35 +47,35 @@ class Modification(object):
 
 class Transform(Modification):
 	pass #Just an ABC
-	
-class TRSTransform(Transform):
-	def __init__(self, tran=None, rot=None, scale=None):
-		self.tran=tran
+
+class PRSTransform(Transform):
+	def __init__(self, pos=None, rot=None, scale=None):
+		self.pos=pos
 		self.rot=rot #Tuple of (angle, axis) where axis is (or is castable to) Vec3
 		self.scale=scale
 	def Apply(self):
-		if self.tran is not None:
-			glTranslated(*self.tran.FastTo3())
+		if self.pos is not None:
+			glTranslated(*self.pos.FastTo3())
 		if self.rot is not None:
 			glRotated(self.rot[0], *self.rot[1].FastTo3())
 		if self.scale is not None:
 			glScaled(*self.scale.FastTo3())
 	def Revert(self): #Since the matrix stack handles these...
 		raise NotImplementedError('Reversion is not allowed for transformations.')
-			
+
 class MultiTransform(Transform):
 	def __init__(self, *transforms):
 		self.transforms=list(transforms)
 	def Apply(swelf):
 		for tran in self.transforms:
 			tran.Apply()
-			
+
 class MatrixTransform(Transform):
 	def __init__(self, matrix):
 		self.matrix=matrix
 	def Apply(self):
 		glMultMatrixd(*numpy.array(self.matrix.flatten())[0])
-		
+
 class Texture(Modification):
 	def __init__(self, surf):
 		self.id=glGenTextures(1)
@@ -90,7 +90,7 @@ class Texture(Modification):
 		glBindTexture(GL_TEXTURE_2D, self.id)
 	def Revert(self):
 		pass #XXX Should we actually rebind the old texture? What if there isn't one?
-		
+
 class ModBlendFunc(Modification):
 	def __init__(self, srcfunc, dstfunc):
 		self.srcfunc=srcfunc
@@ -99,7 +99,7 @@ class ModBlendFunc(Modification):
 		glBlendFunc(self.srcfunc, self.dstfunc)
 	def Revert(self):
 		pass #XXX See above.
-		
+
 class ModTexFilter(Modification):
 	def __init__(self, minfilter, magfilter):
 		self.minfilter=minfilter
@@ -109,7 +109,7 @@ class ModTexFilter(Modification):
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, self.magfilter)
 	def Revert(self):
 		pass #XXX Ditto...again.
-		
+
 class ModTexWrap(Modification):
 	def __init__(self, wraps, wrapt):
 		self.wraps=wraps
@@ -119,7 +119,7 @@ class ModTexWrap(Modification):
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, self.wrapt)
 	def Revert(self):
 		pass #XXX ...must I repeat myself?
-		
+
 class ModCall(Modification):
 	def __init__(self, func, *args):
 		self.func=func
@@ -133,7 +133,7 @@ class Renderable(object):
 	#An object which can be rendered and may have other renderables as children.
 	def __init__(self, *children, **kwargs):
 		self.children=list(children)
-		self.transform=kwargs.get('transform', TRSTransform())
+		self.transform=kwargs.get('transform', PRSTransform())
 		self.enable=kwargs.get('enable', set())
 		self.disable=kwargs.get('disable', set())
 		self.mmode=kwargs.get('mmode', None)
@@ -173,7 +173,7 @@ class Renderable(object):
 		for child in self.children:
 			with child:
 				child.Render()
-				
+
 class Camera(Renderable):
 	def __init__(self, pos, center, up, **kwargs):
 		super(Camera, self).__init__(**kwargs)
@@ -189,7 +189,7 @@ class Camera(Renderable):
 		glMatrixMode(GL_MODELVIEW)
 		gluLookAt(*(tuple(self.pos.FastTo3())+tuple(self.center.FastTo3())+tuple(self.up.FastTo3())))
 		self.RenderChildren()
-				
+
 class PerspectiveCamera(Camera):
 	def __init__(self, pos, center, up, fov, aspect, near, far, **kwargs):
 		super(PerspectiveCamera, self).__init__(pos, center, up, **kwargs)
@@ -199,10 +199,10 @@ class PerspectiveCamera(Camera):
 		self.far=far
 		self.mmode=GL_PROJECTION
 	def Render(self):
-		super(PerspectiveCamera, self).Render() 
+		super(PerspectiveCamera, self).Render()
 		glMatrixMode(GL_PROJECTION)
 		gluPerspective(self.fov, self.aspect, self.near, self.far)
-		
+
 class OrthographicCamera(Camera):
 	def __init__(self, pos, center, up, left, right, bottom, top, **kwargs):
 		super(PerspectiveCamera, self).__init__(pos, center, up, **kwargs)
@@ -212,10 +212,10 @@ class OrthographicCamera(Camera):
 		self.top=top
 		self.mmode=GL_PROJECTION
 	def Render(self):
-		super(PerspectiveCamera, self).Render() 
+		super(PerspectiveCamera, self).Render()
 		glMatrixMode(GL_PROJECTION)
 		gluOrtho2D(self.left, self.right, self.bottom, self.top)
-		
+
 class Scene(Renderable):
 	def __init__(self, camera, **kwargs):
 		super(Scene, self).__init__(**kwargs)
@@ -229,7 +229,7 @@ class Scene(Renderable):
 			self.camera.Render()
 		glMatrixMode(GL_MODELVIEW)
 		self.RenderChildren()
-	
+
 class Mesh(Renderable):
 	def __init__(self, *faces, **kwargs):
 		super(Mesh, self).__init__(**kwargs)
@@ -241,16 +241,19 @@ class Mesh(Renderable):
 		glNewList(self.list, (GL_COMPILE_AND_EXECUTE if execute else GL_COMPILE))
 		self.Render(True)
 		glEndList()
-	def Render(self, skipcompile=False):
-		if self.compile and not skipcompile:
+	def Render(self, justgeometry=False):
+		if self.compile and not justgeometry:
 			if hasattr(self, 'list'):
-				return glCallList(self.list)
+				glCallList(self.list)
 			else:
-				return self.Compile(True)
+				self.Compile(True)
+			self.RenderChildren()
+			return
 		for face in self.faces:
 			with face:
 				face.Render()
-		self.RenderChildren()
+		if not justgeometry:
+			self.RenderChildren()
 
 class Face(Renderable):
 	def __init__(self, mode, *vertices, **kwargs):
@@ -265,7 +268,7 @@ class Face(Renderable):
 			vertex.Render()
 		glEnd()
 		self.RenderChildren()
-		
+
 class Vertex(Renderable):
 	def __init__(self, pos, col=None, norm=None, tex=None, **kwargs):
 		super(Vertex, self).__init__(**kwargs)
@@ -281,12 +284,12 @@ class Vertex(Renderable):
 		if self.norm is not None:
 			glNormal3d(*self.norm.FastTo3())
 		glVertex4f(*self.pos.FastTo4())
-		
+
 class SSSprite(Renderable):
-	def __init__(self, pos, size, center=False, **kwargs):
+	def __init__(self, pos=None, size=None, center=False, **kwargs):
 		super(SSSprite, self).__init__(**kwargs)
-		self.pos=pos
-		self.size=size
+		self.pos=(Vector(0, 0, 0) if pos is None else pos)
+		self.size=(Vector(1, 1) if size is None else size)
 		self.center=center
 	def Render(self, pos=None, size=None):
 		if pos is None:
@@ -296,31 +299,40 @@ class SSSprite(Renderable):
 		#Reset the matrices
 		glMatrixMode(GL_MODELVIEW)
 		glPushMatrix()
+		glLoadIdentity()
 		glMatrixMode(GL_PROJECTION)
 		glPushMatrix()
+		glLoadIdentity()
+		#Ensure we're actually using the texture
+		glEnable(GL_TEXTURE_2D)
+		#Set the color such that modulation is essentially nullified
+		glColor4d(1, 1, 1, 1)
 		#Render to the screen
 		low=(-1 if self.center else 0)
 		glBegin(GL_QUADS)
 		glTexCoord2d(0, 0)
-		glVertex3d(pos.x-low*size.x, pos.y-low*size.x, pos.z)
+		glVertex3d(pos.x+low*size.x, pos.y+low*size.x, pos.z)
 		glTexCoord2d(1, 0)
-		glVertex3d(pos.x+size.x, pos.y-low*size.y, pos.z)
+		glVertex3d(pos.x+size.x, pos.y+low*size.y, pos.z)
 		glTexCoord2d(1, 1)
 		glVertex3d(pos.x+size.x, pos.y+size.y, pos.z)
 		glTexCoord2d(0, 1)
-		glVertex3d(pos.x-low*size.x, pos.y+size.y, pos.z)
+		glVertex3d(pos.x+low*size.x, pos.y+size.y, pos.z)
 		glEnd()
+		#Disable the texture (others may re-enable it later)
+		glDisable(GL_TEXTURE_2D)
 		#Restore matrices
 		glPopMatrix()
 		glMatrixMode(GL_MODELVIEW)
 		glPopMatrix()
 		self.RenderChildren()
-		
+
 class WSSprite(SSSprite):
 	def __init__(self, mapsize=False, **kwargs):
 		super(WSSprite, self).__init__(**kwargs)
 		self.mapsize=mapsize #TODO: Implement this. How?
 	def Render(self):
-		x, y, z=gluProject(*self.pos.FastTo3())
+		x, y, z=gluProject(*self.pos.FastTo3(), view=numpy.array([-2, -2, 2, 2]))
+##		print 'Render at', x, y, z
 		super(WSSprite, self).Render(Vector(x, y, z))
 		self.RenderChildren()
