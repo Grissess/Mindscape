@@ -332,7 +332,8 @@ class WSSprite(SSSprite):
 		super(WSSprite, self).__init__(**kwargs)
 		self.mapsize=mapsize #TODO: Implement this. How?
 	def Render(self):
-		x, y, z=gluProject(*self.pos.FastTo3(), view=numpy.array([-2, -2, 2, 2]))
+		x, y, z=gluProject(*self.pos.FastTo3(), view=numpy.array([-1, -1, 2, 2]))
+		#The weird viewport above should (theoretically) give us an identity viewport.
 ##		print 'Render at', x, y, z
 		super(WSSprite, self).Render(Vector(x, y, z))
 		self.RenderChildren()
