@@ -1,0 +1,7 @@
+Current dependencies (package names provided are as found via apt on Debian, should be the same for Ubuntu and other Debian-derivatives; if you're on Windows, just google most of them...and good luck with numpy.)
+
+Pygame (http://pygame.org/ python-pygame)
+Python bindings to OpenGL (python-opengl)
+Numpy (Numerical Python; python-numpy)
+
+(That's all we're using so far.)
