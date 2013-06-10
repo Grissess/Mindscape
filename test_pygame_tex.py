@@ -14,7 +14,7 @@ char_id=glGenTextures(1)
 glBindTexture(GL_TEXTURE_2D, char_id)
 #glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, char.get_width(), char.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, pygame.image.tostring(char, 'RGBA', True))
-			
+
 #-----Initialize viewport and rendering-----
 
 glDisable(GL_LIGHTING)
