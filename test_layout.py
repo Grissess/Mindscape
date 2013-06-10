@@ -4,6 +4,7 @@ from OpenGL.GL import *
 
 from vmath import Vector, Matrix
 from scenegraph import *
+from layout import *
 
 pygame.init()
 
@@ -52,6 +53,11 @@ lines.children.append(spr)
 
 ##test=SSSprite(texture=tex, center=True)
 ##sc.children.append(test)
+
+con=Container(Grid(3, 2))
+lbl=Label(*con.grid.CellPair(0, 0), text='Hello world!')
+con.children.append(lbl)
+sc.children.append(con)
 
 while True:
 	for ev in pygame.event.get():

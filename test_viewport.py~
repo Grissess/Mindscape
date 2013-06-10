@@ -5,7 +5,7 @@ from pygame.locals import *
 pygame.init()
 
 disp=pygame.display.set_mode((640, 480), HWSURFACE|OPENGL|DOUBLEBUF)
-pygame.display.set_caption('Test:Textures')
+pygame.display.set_caption('Test:Viewports')
 
 #-----Initialize textures-----
 
@@ -55,6 +55,9 @@ while True:
 			exit()
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 	glRotatef(1, 0, 0, 1)
+	glViewport(0, 0, 320, 480)
+	glCallList(mainlist)
+	glViewport(320, 0, 320, 480)
 	glCallList(mainlist)
 	pygame.display.flip()
 	clock.tick(30)

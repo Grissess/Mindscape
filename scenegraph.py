@@ -126,13 +126,17 @@ well as the current mapping mode (see :class:`ModTexWrap`). This class is curren
 implemented so as to exclusively support 2D textures; however, 3D textures may
 become available shortly (and :class:`Vertex` already has support for 4D texture
 coordinates), which will make it easier (and faster, but more memory-consuming)
-to load animated textures.'''
-	def __init__(self, surf):
+to load animated textures.
+
+If the surface parameter is ``None``, the texture will be allocated, but no
+data will be uploaded to it.'''
+	def __init__(self, surf=None):
 		#: An unsigned integer which represents GL's handle to the texture.
 		self.id=glGenTextures(1)
 		#: A ``pygame.Surface`` from which the texture data is loaded.
 		self.surf=surf
-		self.Reload()
+		if surf is not None:
+			self.Reload()
 	def Reload(self):
 		'''Reloads the texture memory from the surface.
 
