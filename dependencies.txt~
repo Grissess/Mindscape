@@ -3,6 +3,5 @@ Current dependencies (package names provided are as found via apt on Debian, sho
 Pygame (http://pygame.org/ python-pygame)
 Python bindings to OpenGL (python-opengl)
 Numpy (Numerical Python; python-numpy)
-Sphinx (for documentation generation; python-sphinx)
 
 (That's all we're using so far.)

@@ -1,0 +1,904 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>scenegraph – Scene Graph &mdash; Mindscape 0.0-prealpha documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0-prealpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Mindscape 0.0-prealpha documentation" href="../../index.html" />
+    <link rel="up" title="API Reference" href="index.html" />
+    <link rel="prev" title="vmath – Vector Math" href="vmath.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="vmath.html" title="vmath – Vector Math"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-scenegraph"></span><div class="section" id="scenegraph-scene-graph">
+<h1>scenegraph &#8211; Scene Graph<a class="headerlink" href="#scenegraph-scene-graph" title="Permalink to this headline">¶</a></h1>
+<p>This module contains the definitions of everything useful to the scene graph.</p>
+<p><a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a>s, held by and manipulated by a renderer, are stored in a <a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a>, which
+contains an arbitrary number of objects, and an active camera. When a scene is
+rendered,</p>
+<ul class="simple">
+<li>The active <a class="reference internal" href="#scenegraph.Camera" title="scenegraph.Camera"><tt class="xref py py-class docutils literal"><span class="pre">Camera</span></tt></a> is rendered first. This sets up the camera transformation
+for the rest of the scene.</li>
+<li>The objects are rendered in the order they appear in the list. Note that,
+since objects may have children, an object&#8217;s children finish rendering before
+the call returns, so rendering one object may render an arbitrary number of
+other, child objects.</li>
+</ul>
+<p>Any <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a> may be one of the following:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#scenegraph.Mesh" title="scenegraph.Mesh"><tt class="xref py py-class docutils literal"><span class="pre">Mesh</span></tt></a>: A collection of vertices in an order appropriate for rendering as a
+sequence of primitives. Meshes form, in general, the most basic 3D
+renderable. They support changing vertex data dynamically, but the
+changed information is not compiled into the display list until the next
+compilation pass, which, at the latest, will be during the next render
+frame.</li>
+<li>AnimatedMesh: Todo!</li>
+<li>Sprite: A texture that is to face the camera, no matter the orientation.</li>
+</ul>
+<p>Additionally, the following objects exist in various parts outside the
+hierarchy of the scene graph:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a>: An object containing all the data needed to define a vertex.</li>
+<li><a class="reference internal" href="#scenegraph.Face" title="scenegraph.Face"><tt class="xref py py-class docutils literal"><span class="pre">Face</span></tt></a>: An object containing a set of vertices, and a primitive rendering mode.</li>
+<li><a class="reference internal" href="#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">Texture</span></tt></a>: A bound texture.</li>
+<li><a class="reference internal" href="#scenegraph.Transform" title="scenegraph.Transform"><tt class="xref py py-class docutils literal"><span class="pre">Transform</span></tt></a>: A transformation.</li>
+</ul>
+<dl class="class">
+<dt id="scenegraph.Modification">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Modification</tt><a class="reference internal" href="../../_modules/scenegraph.html#Modification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Modification" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.Modification" title="scenegraph.Modification"><tt class="xref py py-class docutils literal"><span class="pre">Modification</span></tt></a> is a generic class that applies some state
+change to the current context, and reverts that state change (ideally, to the
+previous state) later&#8211;usually, when that state is no longer needed. It is
+actually the parent of quite a few other classes, <a class="reference internal" href="#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">Texture</span></tt></a> and
+<a class="reference internal" href="#scenegraph.Transform" title="scenegraph.Transform"><tt class="xref py py-class docutils literal"><span class="pre">Transform</span></tt></a> included.</p>
+<dl class="method">
+<dt id="scenegraph.Modification.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Modification.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Modification.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the state change.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This must be defined by a subclass.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Modification.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Modification.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Modification.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Revert the state change.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This must be defined by a subclass.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Transform">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Transform</tt><a class="reference internal" href="../../_modules/scenegraph.html#Transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.Transform" title="scenegraph.Transform"><tt class="xref py py-class docutils literal"><span class="pre">Transform</span></tt></a> class is actually nothing more than an ABC that
+removes the <a class="reference internal" href="#scenegraph.Modification.Revert" title="scenegraph.Modification.Revert"><tt class="xref py py-func docutils literal"><span class="pre">Modification.Revert()</span></tt></a> call from the hierarchy (since
+<a class="reference internal" href="#scenegraph.Transform" title="scenegraph.Transform"><tt class="xref py py-class docutils literal"><span class="pre">Transform</span></tt></a> objects aren&#8217;t required to revert their transforms; they
+depend on the matrix stacks to do that.</p>
+<dl class="method">
+<dt id="scenegraph.Transform.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Transform.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Transform.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises an error.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.PRSTransform">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">PRSTransform</tt><big>(</big><em>pos=None</em>, <em>rot=None</em>, <em>scale=None</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#PRSTransform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.PRSTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.PRSTransform" title="scenegraph.PRSTransform"><tt class="xref py py-class docutils literal"><span class="pre">PRSTransform</span></tt></a> is the general-case transform for any object.
+It houses three attributes, which may be set to <tt class="docutils literal"><span class="pre">None</span></tt> to inhibit the GL
+call that would normally be invoked. All arguments (which are thereby assigned
+directly to the equivalently named attributes) default to <tt class="docutils literal"><span class="pre">None</span></tt>, which makes
+this object a no-op in that case. (In fact, the <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a> class constructs
+such a null-transform by default if none is given.)</p>
+<dl class="attribute">
+<dt id="scenegraph.PRSTransform.pos">
+<tt class="descname">pos</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PRSTransform.pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> to translate by.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.PRSTransform.rot">
+<tt class="descname">rot</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PRSTransform.rot" title="Permalink to this definition">¶</a></dt>
+<dd><p>An iterable (angle, axis) where angle is a scalar in degrees and axis is a 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.PRSTransform.scale">
+<tt class="descname">scale</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PRSTransform.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> to scale by.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.PRSTransform.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#PRSTransform.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.PRSTransform.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the transformation to the current matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.MultiTransform">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">MultiTransform</tt><big>(</big><em>*transforms</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#MultiTransform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.MultiTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>The :class:&#8217;MultiTransform` simply applies a list of transformations (as
+specified in its constructor, or through manipulating the <tt class="docutils literal"><span class="pre">transforms</span></tt>
+attribute) in the order given.</p>
+<dl class="attribute">
+<dt id="scenegraph.MultiTransform.transforms">
+<tt class="descname">transforms</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.MultiTransform.transforms" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="docutils literal"><span class="pre">list</span></tt> of <a class="reference internal" href="#scenegraph.Transform" title="scenegraph.Transform"><tt class="xref py py-class docutils literal"><span class="pre">Transform</span></tt></a>s to apply in order.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.MultiTransform.Apply">
+<tt class="descname">Apply</tt><big>(</big><em>swelf</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#MultiTransform.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.MultiTransform.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the transformation to the current matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.MatrixTransform">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">MatrixTransform</tt><big>(</big><em>matrix</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#MatrixTransform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.MatrixTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.MatrixTransform" title="scenegraph.MatrixTransform"><tt class="xref py py-class docutils literal"><span class="pre">MatrixTransform</span></tt></a> multiplies the current matrix directly by
+the <a class="reference internal" href="vmath.html#vmath.Matrix" title="vmath.Matrix"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Matrix</span></tt></a> given.</p>
+<dl class="attribute">
+<dt id="scenegraph.MatrixTransform.matrix">
+<tt class="descname">matrix</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.MatrixTransform.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="vmath.html#vmath.Matrix" title="vmath.Matrix"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Matrix</span></tt></a> to multiply into the current matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.MatrixTransform.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#MatrixTransform.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.MatrixTransform.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the transformation to the current matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Texture">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Texture</tt><big>(</big><em>surf</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Texture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Texture" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">Texture</span></tt></a> class provides a method to load <tt class="docutils literal"><span class="pre">pygame.Surface</span></tt>s
+into video memory and onto geometry. The actual mapping of the texture onto the
+geometry is determined by texture coordinates (see the <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> class) as
+well as the current mapping mode (see <a class="reference internal" href="#scenegraph.ModTexWrap" title="scenegraph.ModTexWrap"><tt class="xref py py-class docutils literal"><span class="pre">ModTexWrap</span></tt></a>). This class is currently
+implemented so as to exclusively support 2D textures; however, 3D textures may
+become available shortly (and <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> already has support for 4D texture
+coordinates), which will make it easier (and faster, but more memory-consuming)
+to load animated textures.</p>
+<dl class="attribute">
+<dt id="scenegraph.Texture.id">
+<tt class="descname">id</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Texture.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer which represents GL&#8217;s handle to the texture.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Texture.surf">
+<tt class="descname">surf</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Texture.surf" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="docutils literal"><span class="pre">pygame.Surface</span></tt> from which the texture data is loaded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Texture.Reload">
+<tt class="descname">Reload</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Texture.Reload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Texture.Reload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the texture memory from the surface.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must call this after modifying the texture surface for those changes to
+be visible in GL. This is not guaranteed to be a fast operation; video cards
+(and their drivers) tend to prioritize speed of access over speed of uploading
+(for obvious reasons), so this will likely not be an efficient way to animate
+textures, and should only be done as necessary.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Texture.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Texture.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Texture.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind the texture such that it is available for the next rendering operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Texture.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Texture.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Texture.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you don&#8217;t want to have your geometry be affected by the texture any more,
+disable GL_TEXTURE_2D. This is easiest done by having it so that
+GL_TEXTURE_2D is enabled only so long as that geometry is rendering&#8211;by
+putting it in the <a class="reference internal" href="#scenegraph.Renderable.enable" title="scenegraph.Renderable.enable"><tt class="xref py py-attr docutils literal"><span class="pre">Renderable.enable</span></tt></a> set.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.ModBlendFunc">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">ModBlendFunc</tt><big>(</big><em>srcfunc</em>, <em>dstfunc</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModBlendFunc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModBlendFunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a simple <a class="reference internal" href="#scenegraph.Modification" title="scenegraph.Modification"><tt class="xref py py-class docutils literal"><span class="pre">Modification</span></tt></a> which changes the current GL
+blend function. The arguments are expected to be equivalent to the glBlendFunc
+call</p>
+<dl class="attribute">
+<dt id="scenegraph.ModBlendFunc.srcfunc">
+<tt class="descname">srcfunc</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModBlendFunc.srcfunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer specifying the source function (see the GL documentation)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.ModBlendFunc.dstfunc">
+<tt class="descname">dstfunc</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModBlendFunc.dstfunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer specifying the destination function (see the GL documentation)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModBlendFunc.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModBlendFunc.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModBlendFunc.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the blending function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModBlendFunc.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModBlendFunc.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModBlendFunc.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This behavior shouldn&#8217;t be a problem so long as you remember to modify the
+blending function (or disable) GL_BLEND as needed. See <a class="reference internal" href="#scenegraph.Texture.Revert" title="scenegraph.Texture.Revert"><tt class="xref py py-func docutils literal"><span class="pre">Texture.Revert()</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.ModTexFilter">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">ModTexFilter</tt><big>(</big><em>minfilter</em>, <em>magfilter</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModTexFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModTexFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This <a class="reference internal" href="#scenegraph.Modification" title="scenegraph.Modification"><tt class="xref py py-class docutils literal"><span class="pre">Modification</span></tt></a> changes the texture filter parameters. The
+parameters given are expected to be the same ones given in a glTexParameterf
+call with GL_TEXTURE_2D as the target and ...MAG_FILTER or ...MIN_FILTER as
+the parameter.</p>
+<dl class="attribute">
+<dt id="scenegraph.ModTexFilter.minfilter">
+<tt class="descname">minfilter</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModTexFilter.minfilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer specifying the minification filter (see the GL documentation)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.ModTexFilter.magfilter">
+<tt class="descname">magfilter</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModTexFilter.magfilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer specifying the magnification filter (see the GL documentation)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModTexFilter.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModTexFilter.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModTexFilter.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the texture filters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModTexFilter.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModTexFilter.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModTexFilter.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This shouldn&#8217;t be a problem if you set this as needed and disable GL_TEXTURE_2D
+when you&#8217;re not using it (see <a class="reference internal" href="#scenegraph.Texture.Revert" title="scenegraph.Texture.Revert"><tt class="xref py py-func docutils literal"><span class="pre">Texture.Revert()</span></tt></a>.) In general, this only
+needs to be set once for the whole application, barring special circumstances.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.ModTexWrap">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">ModTexWrap</tt><big>(</big><em>wraps</em>, <em>wrapt</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModTexWrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModTexWrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>This <a class="reference internal" href="#scenegraph.Modification" title="scenegraph.Modification"><tt class="xref py py-class docutils literal"><span class="pre">Modification</span></tt></a> changes the texture wrapping parameters. The
+parameters given are expected to be the same ones given in a glTexParameterf
+call with GL_TEXTURE_2D as the target and ...WRAP_S or ...WRAP_T as
+the parameter.</p>
+<dl class="attribute">
+<dt id="scenegraph.ModTexWrap.wraps">
+<tt class="descname">wraps</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModTexWrap.wraps" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer specifying the s coordinate wrapping mode (see the GL documentation)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.ModTexWrap.wrapt">
+<tt class="descname">wrapt</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModTexWrap.wrapt" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer specifying the t coordinate wrapping mode (see the GL documentation)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModTexWrap.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModTexWrap.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModTexWrap.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the wrapping mode.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModTexWrap.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModTexWrap.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModTexWrap.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="#scenegraph.ModTexFilter.Revert" title="scenegraph.ModTexFilter.Revert"><tt class="xref py py-func docutils literal"><span class="pre">ModTexFilter.Revert()</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.ModCall">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">ModCall</tt><big>(</big><em>func</em>, <em>*args</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModCall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModCall" title="Permalink to this definition">¶</a></dt>
+<dd><p>This <a class="reference internal" href="#scenegraph.Modification" title="scenegraph.Modification"><tt class="xref py py-class docutils literal"><span class="pre">Modification</span></tt></a> calls a specified function with the
+specified arguments when it is applied. This is intended to allow for the
+inclusion of esoteric or unimplemented state-changing features.</p>
+<p>Currently, reversion is not supported, but it probably will be.</p>
+<dl class="attribute">
+<dt id="scenegraph.ModCall.func">
+<tt class="descname">func</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModCall.func" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="docutils literal"><span class="pre">callable</span></tt> to be called.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.ModCall.args">
+<tt class="descname">args</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.ModCall.args" title="Permalink to this definition">¶</a></dt>
+<dd><p>An iterable of arguments to be passed positionally.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModCall.Apply">
+<tt class="descname">Apply</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModCall.Apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModCall.Apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.ModCall.Revert">
+<tt class="descname">Revert</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#ModCall.Revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.ModCall.Revert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Todo!</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Renderable">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Renderable</tt><big>(</big><em>*children</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Renderable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Renderable" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a> class implements anything and everything that
+can actually be drawn to the screen. Importantly, it is responsible for
+implementing the shared functionality between all such objects, such as their
+ability to have children under their coordinate space, to enable and disable
+GL features, to be set to a specific matrix mode, to implement transformations,
+and to modify the current state&#8211;and possibly more.</p>
+<p>The renderable constructor is interesting in that it interprets all of its
+positional arguments as being children. To specify non-children arguments, such
+arguments <em>must</em> be given as keyword arguments. Furthermore, this giving (and
+propagating) of keyword arguments is copied down the inheritance chain, meaning
+that the <a class="reference internal" href="#scenegraph.Renderable.texture" title="scenegraph.Renderable.texture"><tt class="xref py py-attr docutils literal"><span class="pre">texture</span></tt></a> argument has the same meaning on a <a class="reference internal" href="#scenegraph.WSSprite" title="scenegraph.WSSprite"><tt class="xref py py-class docutils literal"><span class="pre">WSSprite</span></tt></a>
+as it does a <a class="reference internal" href="#scenegraph.Mesh" title="scenegraph.Mesh"><tt class="xref py py-class docutils literal"><span class="pre">Mesh</span></tt></a>, or even a <a class="reference internal" href="#scenegraph.Camera" title="scenegraph.Camera"><tt class="xref py py-class docutils literal"><span class="pre">Camera</span></tt></a> (though it is not used
+there). Keep this inheritance in mind when considering how to, e.g., move a
+<a class="reference internal" href="#scenegraph.Mesh" title="scenegraph.Mesh"><tt class="xref py py-class docutils literal"><span class="pre">Mesh</span></tt></a>, change the texture of a <a class="reference internal" href="#scenegraph.WSSprite" title="scenegraph.WSSprite"><tt class="xref py py-class docutils literal"><span class="pre">WSSprite</span></tt></a>, etc.</p>
+<dl class="attribute">
+<dt id="scenegraph.Renderable.children">
+<tt class="descname">children</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.children" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a>s, which may be empty.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Renderable.transform">
+<tt class="descname">transform</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#scenegraph.Transform" title="scenegraph.Transform"><tt class="xref py py-class docutils literal"><span class="pre">Transform</span></tt></a> to be applied before rendering; defaults to an empty <a class="reference internal" href="#scenegraph.PRSTransform" title="scenegraph.PRSTransform"><tt class="xref py py-class docutils literal"><span class="pre">PRSTransform</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Renderable.enable">
+<tt class="descname">enable</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.enable" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="docutils literal"><span class="pre">set</span></tt> of states to be enabled before rendering; defaults to an empty set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Renderable.disable">
+<tt class="descname">disable</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.disable" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="docutils literal"><span class="pre">set</span></tt> of states to be disabled before rendering; defaults to an empty set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Renderable.mmode">
+<tt class="descname">mmode</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.mmode" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer (or None, by default) which, if set, forces the matrix mode before rendering.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Renderable.texture">
+<tt class="descname">texture</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.texture" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">Texture</span></tt></a> to be bound before rendering, if set (default None).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Renderable.modifications">
+<tt class="descname">modifications</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Renderable.modifications" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="docutils literal"><span class="pre">set</span></tt> of modifications to be <a class="reference internal" href="#scenegraph.Modification.Apply" title="scenegraph.Modification.Apply"><tt class="xref py py-func docutils literal"><span class="pre">Modification.Apply()</span></tt></a>&#8216;d before rendering; default empty.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Renderable.PushState">
+<tt class="descname">PushState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Renderable.PushState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Renderable.PushState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push the state (set up everything before actually rendering).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>You can do this by using the object as a context manager:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">renderable</span><span class="p">:</span>
+        <span class="n">renderable</span><span class="o">.</span><span class="n">Render</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="last">This is guaranteed to call <a class="reference internal" href="#scenegraph.Renderable.PopState" title="scenegraph.Renderable.PopState"><tt class="xref py py-func docutils literal"><span class="pre">PopState()</span></tt></a> for you, even if an error occurs.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Renderable.PopState">
+<tt class="descname">PopState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Renderable.PopState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Renderable.PopState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pop the state (undo all modifications done before rendering).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Renderable.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Renderable.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Renderable.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actually render the object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This must be defined in a subclass.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Renderable.RenderChildren">
+<tt class="descname">RenderChildren</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Renderable.RenderChildren"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Renderable.RenderChildren" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render all child objects.</p>
+<p>This is intended to be called from within a defined <a class="reference internal" href="#scenegraph.Renderable.Render" title="scenegraph.Renderable.Render"><tt class="xref py py-func docutils literal"><span class="pre">Render()</span></tt></a> method.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">There is no guarantee as to how a child may change the state, or what function
+calls it will make while rendering&#8211;which is of particular concern if you&#8217;re
+between glBegin() and glEnd(). You should not call this method from inside
+such a pairing, nor should you call it if you&#8217;re concerned about losing some
+of your state information; it&#8217;s best to call this at the end of <a class="reference internal" href="#scenegraph.Renderable.Render" title="scenegraph.Renderable.Render"><tt class="xref py py-func docutils literal"><span class="pre">Render()</span></tt></a>
+and depend on your own <a class="reference internal" href="#scenegraph.Renderable.PopState" title="scenegraph.Renderable.PopState"><tt class="xref py py-func docutils literal"><span class="pre">PopState()</span></tt></a> method to do whatever cleanup is
+needed.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Camera">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Camera</tt><big>(</big><em>pos</em>, <em>center</em>, <em>up</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Camera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Camera" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is the base class to two more specific cameras, but it also
+implements the shared functionality of setting up the GL_MODELVIEW side of the
+camera transformation&#8211;which makes the camera have a set position and orientation
+in the scene.</p>
+<dl class="attribute">
+<dt id="scenegraph.Camera.pos">
+<tt class="descname">pos</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Camera.pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the camera position.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Camera.center">
+<tt class="descname">center</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Camera.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the point to look at.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Camera.up">
+<tt class="descname">up</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Camera.up" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing up direction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Camera.PushState">
+<tt class="descname">PushState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Camera.PushState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Camera.PushState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing. (The default <a class="reference internal" href="#scenegraph.Renderable.PushState" title="scenegraph.Renderable.PushState"><tt class="xref py py-func docutils literal"><span class="pre">Renderable.PushState()</span></tt></a> would interfere with the matrix mode.)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Camera.PopState">
+<tt class="descname">PopState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Camera.PopState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Camera.PopState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing. (The default <a class="reference internal" href="#scenegraph.Renderable.PopState" title="scenegraph.Renderable.PopState"><tt class="xref py py-func docutils literal"><span class="pre">Renderable.PopState()</span></tt></a> would interfere with the matrix mode.)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Camera.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Camera.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Camera.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up the camera transformation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.PerspectiveCamera">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">PerspectiveCamera</tt><big>(</big><em>pos</em>, <em>center</em>, <em>up</em>, <em>fov</em>, <em>aspect</em>, <em>near</em>, <em>far</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#PerspectiveCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.PerspectiveCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">Perspective</span></tt> camera is a <a class="reference internal" href="#scenegraph.Camera" title="scenegraph.Camera"><tt class="xref py py-class docutils literal"><span class="pre">Camera</span></tt></a> whose projection
+matrix is created by using the gluPerspective function, to which this class&#8217;
+constructor (and attributes) are applied.</p>
+<dl class="attribute">
+<dt id="scenegraph.PerspectiveCamera.fov">
+<tt class="descname">fov</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PerspectiveCamera.fov" title="Permalink to this definition">¶</a></dt>
+<dd><p>A floating point field-of-view along the Y dimension.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.PerspectiveCamera.aspect">
+<tt class="descname">aspect</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PerspectiveCamera.aspect" title="Permalink to this definition">¶</a></dt>
+<dd><p>A floating point aspect ratio representing the viewport&#8217;s X/Y ratio.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.PerspectiveCamera.near">
+<tt class="descname">near</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PerspectiveCamera.near" title="Permalink to this definition">¶</a></dt>
+<dd><p>The near clipping plane (&gt;0)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.PerspectiveCamera.far">
+<tt class="descname">far</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.PerspectiveCamera.far" title="Permalink to this definition">¶</a></dt>
+<dd><p>The far clipping plane. (&gt;0)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.PerspectiveCamera.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#PerspectiveCamera.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.PerspectiveCamera.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the camera projection.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.OrthographicCamera">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">OrthographicCamera</tt><big>(</big><em>pos</em>, <em>center</em>, <em>up</em>, <em>left</em>, <em>right</em>, <em>bottom</em>, <em>top</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#OrthographicCamera"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.OrthographicCamera" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">Perspective</span></tt> camera is a <a class="reference internal" href="#scenegraph.Camera" title="scenegraph.Camera"><tt class="xref py py-class docutils literal"><span class="pre">Camera</span></tt></a> whose projection
+matrix is created by using the gluOrtho2D function, to which this class&#8217;
+constructor (and attributes) are applied.</p>
+<dl class="attribute">
+<dt id="scenegraph.OrthographicCamera.left">
+<tt class="descname">left</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.OrthographicCamera.left" title="Permalink to this definition">¶</a></dt>
+<dd><p>The leftmost coordinate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.OrthographicCamera.right">
+<tt class="descname">right</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.OrthographicCamera.right" title="Permalink to this definition">¶</a></dt>
+<dd><p>The lrightmost coordinate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.OrthographicCamera.bottom">
+<tt class="descname">bottom</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.OrthographicCamera.bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>The bottommost coordinate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.OrthographicCamera.top">
+<tt class="descname">top</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.OrthographicCamera.top" title="Permalink to this definition">¶</a></dt>
+<dd><p>The topmost coordinate.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.OrthographicCamera.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#OrthographicCamera.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.OrthographicCamera.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the camera projection.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Scene">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Scene</tt><big>(</big><em>camera</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Scene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a> is intended to be the scenegraph parent of all other
+children in the graph. Thereby, the <a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a> is solely responsible for
+setting up the global state and initializing the GL to a known state before
+rendering all of its objects.</p>
+<p>Despite this design intention, it is entirely possible to have multiple
+<a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a>s, or <a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a>s within <a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a>s, etc.</p>
+<dl class="method">
+<dt id="scenegraph.Scene.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Scene.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Scene.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the scene.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>To ensure that the <a class="reference internal" href="#scenegraph.Scene" title="scenegraph.Scene"><tt class="xref py py-class docutils literal"><span class="pre">Scene</span></tt></a> has initialized the environment properly,
+you <em>must</em> call <a class="reference internal" href="#scenegraph.Renderable.PushState" title="scenegraph.Renderable.PushState"><tt class="xref py py-func docutils literal"><span class="pre">Renderable.PushState()</span></tt></a> and <a class="reference internal" href="#scenegraph.Renderable.PopState" title="scenegraph.Renderable.PopState"><tt class="xref py py-func docutils literal"><span class="pre">Renderable.PopState()</span></tt></a>
+as you would for a normal <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a> before rendering it. This is
+most easily accomplished by using the <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a>&#8216;s context-manager
+feature:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">scene</span><span class="p">:</span>
+        <span class="n">scene</span><span class="o">.</span><span class="n">Render</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Mesh">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Mesh</tt><big>(</big><em>*faces</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Mesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#scenegraph.Mesh" title="scenegraph.Mesh"><tt class="xref py py-class docutils literal"><span class="pre">Mesh</span></tt></a> object consists of zero or more <tt class="xref py py-class docutils literal"><span class="pre">Faces</span></tt>, and
+represents the smallest object that can be compiled into a GL display list.
+Aside from this feature, they are no different from any other <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a>.</p>
+<dl class="attribute">
+<dt id="scenegraph.Mesh.faces">
+<tt class="descname">faces</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Mesh.faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <a class="reference internal" href="#scenegraph.Face" title="scenegraph.Face"><tt class="xref py py-class docutils literal"><span class="pre">Face</span></tt></a> objects</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Mesh.compile">
+<tt class="descname">compile</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Mesh.compile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not to compile this <a class="reference internal" href="#scenegraph.Mesh" title="scenegraph.Mesh"><tt class="xref py py-class docutils literal"><span class="pre">Mesh</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Mesh.Compile">
+<tt class="descname">Compile</tt><big>(</big><em>execute=False</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Mesh.Compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Mesh.Compile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compile the mesh.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This performs the process unconditionally, and will disregard the <a class="reference internal" href="#scenegraph.Mesh.compile" title="scenegraph.Mesh.compile"><tt class="xref py py-attr docutils literal"><span class="pre">compile</span></tt></a>
+attribute. However, without the <a class="reference internal" href="#scenegraph.Mesh.compile" title="scenegraph.Mesh.compile"><tt class="xref py py-attr docutils literal"><span class="pre">compile</span></tt></a> attribute set, the compiled
+display list won&#8217;t actually be called on rendering. (One surmises the resultant
+display list could, of course, be used elsewhere for hackish reasons...).</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Mesh.Render">
+<tt class="descname">Render</tt><big>(</big><em>justgeometry=False</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Mesh.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Mesh.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the mesh. if <a class="reference internal" href="#scenegraph.Mesh.compile" title="scenegraph.Mesh.compile"><tt class="xref py py-attr docutils literal"><span class="pre">compile</span></tt></a> is True, this will also compile
+the mesh, if needed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Face">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Face</tt><big>(</big><em>mode</em>, <em>*vertices</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Face"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Face" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#scenegraph.Face" title="scenegraph.Face"><tt class="xref py py-class docutils literal"><span class="pre">Face</span></tt></a> class represents one GL primitive as a primitive mode
+and a sequence of vertices (of the type <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a>).</p>
+<dl class="attribute">
+<dt id="scenegraph.Face.mode">
+<tt class="descname">mode</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Face.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The primitive mode, to be passed to glBegin.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Face.vertices">
+<tt class="descname">vertices</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Face.vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>An iterable of <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Face.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Face.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Face.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the face (by drawing one primitive).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Due to concerns highlighted in <a class="reference internal" href="#scenegraph.Renderable.RenderChildren" title="scenegraph.Renderable.RenderChildren"><tt class="xref py py-func docutils literal"><span class="pre">Renderable.RenderChildren()</span></tt></a>, the
+<a class="reference internal" href="#scenegraph.Face" title="scenegraph.Face"><tt class="xref py py-class docutils literal"><span class="pre">Face</span></tt></a> does not render its children until after the drawing of the
+primitive is over, nor does it push the state of a <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.Vertex">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Vertex</tt><big>(</big><em>pos</em>, <em>col=None</em>, <em>norm=None</em>, <em>tex=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Vertex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Vertex" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> is, quite possibly, the most primitive <a class="reference internal" href="#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">Renderable</span></tt></a>
+derivative. When rendered, the <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> will call at most four functions,
+the final one of which being glVertex4d, which places a vertex into a primitive.
+The <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> class also, of course, provides support for color, normals,
+and texture coordinates of these vertices.</p>
+<dl class="attribute">
+<dt id="scenegraph.Vertex.pos">
+<tt class="descname">pos</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Vertex.pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 4D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the vertex&#8217;s local position.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Vertex.col">
+<tt class="descname">col</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Vertex.col" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 4D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the vertex&#8217;s color and alpha.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Vertex.norm">
+<tt class="descname">norm</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Vertex.norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the vertex&#8217;s normal vector.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.Vertex.tex">
+<tt class="descname">tex</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Vertex.tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 4D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the vertex&#8217;s texture coordinate.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.Vertex.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Vertex.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Vertex.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the vertex.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">As outlined in <a class="reference internal" href="#scenegraph.Face.Render" title="scenegraph.Face.Render"><tt class="xref py py-func docutils literal"><span class="pre">Face.Render()</span></tt></a>, <tt class="docutils literal"><span class="pre">PushState()</span></tt> and <tt class="docutils literal"><span class="pre">PopState()</span></tt> will
+not be called for a <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a>, because these are likely to introduce
+calls which are illegal between glBegin and glEnd.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.SSSprite">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">SSSprite</tt><big>(</big><em>pos=None</em>, <em>size=None</em>, <em>center=False</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#SSSprite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.SSSprite" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <a class="reference internal" href="#scenegraph.SSSprite" title="scenegraph.SSSprite"><tt class="xref py py-class docutils literal"><span class="pre">SSSprite</span></tt></a>, or a &#8220;Screen Space Sprite,&#8221; is a sprite (fixed,
+textured graphic which always renders orthogonal to the view) which is positioned
+relative to the screen space&#8211;wherein the lower left corner is (-1, -1), the
+upper right corner is (1, 1), and the Z-coordinate is only used during depth
+testing (with GL_DEPTH_TEST enabled) to allow for Z-ordering occlusion. For
+this class to be useful at all, the <a class="reference internal" href="#scenegraph.Renderable.texture" title="scenegraph.Renderable.texture"><tt class="xref py py-attr docutils literal"><span class="pre">Renderable.texture</span></tt></a> attribute must
+be set.</p>
+<dl class="attribute">
+<dt id="scenegraph.SSSprite.pos">
+<tt class="descname">pos</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.SSSprite.pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 3D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the lower left corner position in screen space (or the center if <a class="reference internal" href="#scenegraph.SSSprite.center" title="scenegraph.SSSprite.center"><tt class="xref py py-attr docutils literal"><span class="pre">center</span></tt></a> is True).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.SSSprite.size">
+<tt class="descname">size</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.SSSprite.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> representing the size of the sprite in screen space (where 2 is full width/height).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="scenegraph.SSSprite.center">
+<tt class="descname">center</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.SSSprite.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the <a class="reference internal" href="#scenegraph.SSSprite.pos" title="scenegraph.SSSprite.pos"><tt class="xref py py-attr docutils literal"><span class="pre">pos</span></tt></a> attribute is to be interpreted as a center point instead of the lower left corner.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.SSSprite.Render">
+<tt class="descname">Render</tt><big>(</big><em>pos=None</em>, <em>size=None</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#SSSprite.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.SSSprite.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the sprite; optionally, an override position and size may be given.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scenegraph.WSSprite">
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">WSSprite</tt><big>(</big><em>mapsize=False</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#WSSprite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.WSSprite" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#scenegraph.WSSprite" title="scenegraph.WSSprite"><tt class="xref py py-class docutils literal"><span class="pre">WSSprite</span></tt></a>, or &#8220;World Space Sprite,&#8221; is a sprite that appears
+at a specified position in the scene, rather than at a fixed screen space
+coordinate. Aside from that, it is functionally identical to its parent class,
+the <a class="reference internal" href="#scenegraph.SSSprite" title="scenegraph.SSSprite"><tt class="xref py py-class docutils literal"><span class="pre">SSSprite</span></tt></a>.</p>
+<dl class="attribute">
+<dt id="scenegraph.WSSprite.mapsize">
+<tt class="descname">mapsize</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.WSSprite.mapsize" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Not implemented; will eventually map the size using the depth coordinate.)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scenegraph.WSSprite.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#WSSprite.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.WSSprite.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the sprite (by passing in the position override parameter to
+<a class="reference internal" href="#scenegraph.SSSprite.Render" title="scenegraph.SSSprite.Render"><tt class="xref py py-func docutils literal"><span class="pre">SSSprite.Render()</span></tt></a>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="vmath.html"
+                        title="previous chapter">vmath &#8211; Vector Math</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/doc/src/scenegraph.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="vmath.html" title="vmath – Vector Math"
+             >previous</a> |</li>
+        <li><a href="../../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Grissess, PaulTagg, Niles, et. al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
