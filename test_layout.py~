@@ -55,9 +55,17 @@ lines.children.append(spr)
 ##sc.children.append(test)
 
 con=Container(Grid(3, 2))
-lbl=Label(*con.grid.CellPair(0, 0), text='Hello world!')
+lbl=Label(*con.grid.CellPair(0, 0), text='Hello world!', bcol=Vector(0.5, 0.5, 0, 0.5))
+con.children.append(lbl)
+lbl=Label(*con.grid.CellPair(1, 0), text='I\'m fine today', align=TALIGN.LEFT, bcol=Vector(0.5, 0, 0, 0.5))
+con.children.append(lbl)
+lbl=Label(*con.grid.CellPair(1, 1), text='How are you?', align=TALIGN.FILLX, bcol=Vector(0, 0, 0.5, 0.5))
+con.children.append(lbl)
+lbl=Label(*con.grid.CellPair(2, 0), text='I\'m great thanks!', align=TALIGN.FILLY, bcol=Vector(0, 0.5, 0, 0.5))
 con.children.append(lbl)
 sc.children.append(con)
+
+print 'Viewport: ', glGetIntegerv(GL_VIEWPORT)
 
 while True:
 	for ev in pygame.event.get():

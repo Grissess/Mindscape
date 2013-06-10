@@ -112,21 +112,27 @@ class Label(Widget):
 		self.text=text
 		self._oldtext=None
 		self.align=align
-		self.font=(pygame.font.SysFont(pygame.font.get_default_font(), 8) if font is None else font)
-		self.tex=Texture()
+		self.font=(pygame.font.SysFont(pygame.font.get_default_font(), 30) if font is None else font)
+		self.tex=None
 	def Render(self):
+		glPushAttrib(GL_ENABLE_BIT)
 		glDisable(GL_TEXTURE_2D)
+		glDisable(GL_DEPTH_TEST)
 		if self.bcol is not None:
 			glColor4d(*self.bcol.FastTo4())
-		glRectdv((-1, -1), (1, 1))
-		if self.text and self.text is not self._oldtext:
-			fcol=self.fcol
-			if fcol is None:
-				fcol=Vector(1, 1, 1)
-			tsurf=self.font.render(self.text, True, tuple(255*fcol.FastTo3()))
-			self.tex.surf=tsurf
-			self.tex.Reload()
-			tsz=Vector(*tsurf.get_size())
+			glRectdv((-1, -1), (1, 1))
+		if self.text:
+			if self.text is not self._oldtext:
+				fcol=self.fcol
+				if fcol is None:
+					fcol=Vector(1, 1, 1)
+				tsurf=self.font.render(self.text, True, tuple(255*fcol.FastTo3()))
+				if self.tex is None:
+					self.tex=Texture()
+				self.tex.surf=tsurf
+				self.tex.Reload()
+				self._oldtext=self.text
+			tsz=Vector(*self.tex.surf.get_size())
 			vsz=Vector(*(glGetIntegerv(GL_VIEWPORT)[2:]))
 			csz=tsz/vsz
 			minima=-csz
@@ -146,6 +152,8 @@ class Label(Widget):
 				if not self.align&TALIGN.BOTTOM:
 					minima.y+=1-csz.y
 			glEnable(GL_TEXTURE_2D)
+			self.tex.Reload()
+			#self.tex.Apply()
 			glColor4d(1, 1, 1, 1)
 			glBegin(GL_QUADS)
 			glTexCoord2d(0, 0)
@@ -157,5 +165,4 @@ class Label(Widget):
 			glTexCoord2d(0, 1)
 			glVertex2d(minima.x, maxima.y)
 			glEnd()
-			glDisable(GL_TEXTURE_2D)
-			self._oldtext=self.text
+		glPopAttrib()
