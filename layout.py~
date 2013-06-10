@@ -129,7 +129,7 @@ class Label(Widget):
 				tsurf=self.font.render(self.text, True, tuple(255*fcol.FastTo3()))
 				if self.tex is None:
 					self.tex=Texture()
-				self.tex.surf=tsurf
+				self.tex.surf=tsurf.copy()
 				self.tex.Reload()
 				self._oldtext=self.text
 			tsz=Vector(*self.tex.surf.get_size())
@@ -153,7 +153,8 @@ class Label(Widget):
 					minima.y+=1-csz.y
 			glEnable(GL_TEXTURE_2D)
 			self.tex.Reload()
-			self.tex.Apply()
+			print 'Label', self.text, 'has TID', self.tex.id
+			#self.tex.Apply()
 			glColor4d(1, 1, 1, 1)
 			glBegin(GL_QUADS)
 			glTexCoord2d(0, 0)

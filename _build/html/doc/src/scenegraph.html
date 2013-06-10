@@ -207,7 +207,7 @@ the <a class="reference internal" href="vmath.html#vmath.Matrix" title="vmath.Ma
 
 <dl class="class">
 <dt id="scenegraph.Texture">
-<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Texture</tt><big>(</big><em>surf</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Texture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Texture" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">scenegraph.</tt><tt class="descname">Texture</tt><big>(</big><em>surf=None</em><big>)</big><a class="reference internal" href="../../_modules/scenegraph.html#Texture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scenegraph.Texture" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">Texture</span></tt></a> class provides a method to load <tt class="docutils literal"><span class="pre">pygame.Surface</span></tt>s
 into video memory and onto geometry. The actual mapping of the texture onto the
 geometry is determined by texture coordinates (see the <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> class) as
@@ -216,6 +216,8 @@ implemented so as to exclusively support 2D textures; however, 3D textures may
 become available shortly (and <a class="reference internal" href="#scenegraph.Vertex" title="scenegraph.Vertex"><tt class="xref py py-class docutils literal"><span class="pre">Vertex</span></tt></a> already has support for 4D texture
 coordinates), which will make it easier (and faster, but more memory-consuming)
 to load animated textures.</p>
+<p>If the surface parameter is <tt class="docutils literal"><span class="pre">None</span></tt>, the texture will be allocated, but no
+data will be uploaded to it.</p>
 <dl class="attribute">
 <dt id="scenegraph.Texture.id">
 <tt class="descname">id</tt><em class="property"> = None</em><a class="headerlink" href="#scenegraph.Texture.id" title="Permalink to this definition">¶</a></dt>

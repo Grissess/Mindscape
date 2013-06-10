@@ -153,6 +153,7 @@ class Label(Widget):
 					minima.y+=1-csz.y
 			glEnable(GL_TEXTURE_2D)
 			self.tex.Reload()
+			print 'Label', self.text, 'has TID', self.tex.id
 			#self.tex.Apply()
 			glColor4d(1, 1, 1, 1)
 			glBegin(GL_QUADS)

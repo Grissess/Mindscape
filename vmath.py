@@ -75,7 +75,7 @@ described below).'''
 		inst=numpy.zeros((x,))
 		if x>=4:
 			inst[3]=1 #W is, by default, 1
-		inst[:len(self)]=self
+		inst[:len(self)]=self[:x]
 		return type(self)(*inst)
 	def To2(self):
 		'''Returns a duplicate :class:`Vector` with only two elements.'''
@@ -158,7 +158,7 @@ is converted to a 4D vector).'''
 		if fast and len(self)==x:
 			return self
 		inst=type(self)(numpy.eye(x))
-		inst[:len(self), :len(self)]=self
+		inst[:len(self), :len(self)]=self[:x, :x]
 		return inst
 	def To2(self):
 		'''Returns a duplicate 2D :class:`Matrix`.'''
