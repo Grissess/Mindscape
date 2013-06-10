@@ -13,9 +13,8 @@ char=pygame.image.load('data/char.png')
 char_id=glGenTextures(1)
 glBindTexture(GL_TEXTURE_2D, char_id)
 #glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, char.get_width(), char.get_height(), 0,
-             GL_RGBA, GL_UNSIGNED_BYTE, pygame.image.tostring(char, 'RGBA', True))
-            
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, char.get_width(), char.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, pygame.image.tostring(char, 'RGBA', True))
+			
 #-----Initialize viewport and rendering-----
 
 glDisable(GL_LIGHTING)
@@ -38,9 +37,9 @@ glNewList(mainlist, GL_COMPILE)
 
 glBegin(GL_QUADS)
 for x, y in zip((-1, 1, 1, -1), (-1, -1, 1, 1)):
-    glColor4f(1, 1, 1, 1)
-    glTexCoord2f(x, y)
-    glVertex3f(x, y, 0)
+	glColor4f(1, 1, 1, 1)
+	glTexCoord2f(x, y)
+	glVertex3f(x, y, 0)
 glEnd()
 
 glEndList()
@@ -50,13 +49,13 @@ glEndList()
 clock=pygame.time.Clock()
 
 while True:
-    for ev in pygame.event.get():
-        if ev.type==QUIT or (ev.type==KEYDOWN and ev.key==K_ESCAPE):
-            exit()
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-    glRotatef(1, 0, 0, 1)
-    glCallList(mainlist)
-    pygame.display.flip()
-    clock.tick(30)
-    
+	for ev in pygame.event.get():
+		if ev.type==QUIT or (ev.type==KEYDOWN and ev.key==K_ESCAPE):
+			exit()
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+	glRotatef(1, 0, 0, 1)
+	glCallList(mainlist)
+	pygame.display.flip()
+	clock.tick(30)
+	
 
