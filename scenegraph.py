@@ -151,8 +151,10 @@ data will be uploaded to it.'''
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.surf.get_width(),
 					 self.surf.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
 					 pygame.image.tostring(self.surf, 'RGBA', True))
+		glFlush()
 	def Apply(self):
 		'''Bind the texture such that it is available for the next rendering operation.'''
+		glEnable(GL_TEXTURE_2D)
 		glBindTexture(GL_TEXTURE_2D, self.id)
 	def Revert(self):
 		'''Does nothing.

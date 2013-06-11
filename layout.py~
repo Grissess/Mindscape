@@ -44,8 +44,8 @@ class Grid(object):
 		self.rows=(LayoutVector(rows) if isinstance(rows, (int, long)) else rows)
 		self.cols=(LayoutVector(cols) if isinstance(cols, (int, long)) else cols)
 	def Compute(self, dims):
-		self.rows.Compute(dims.x)
-		self.cols.Compute(dims.y)
+		self.rows.Compute(dims.y)
+		self.cols.Compute(dims.x)
 	def CellPair(self, x, y):
 		return self.cols[x], self.rows[y]
 
@@ -114,6 +114,17 @@ class Label(Widget):
 		self.align=align
 		self.font=(pygame.font.SysFont(pygame.font.get_default_font(), 30) if font is None else font)
 		self.tex=None
+		if self.text:
+			self.Update()
+	def Update(self):
+		fcol=self.fcol
+		if fcol is None:
+			fcol=Vector(1, 1, 1)
+		tsurf=self.font.render(self.text, True, tuple(255*fcol.FastTo3()))
+		if self.tex is None:
+			self.tex=Texture()
+		self.tex.surf=tsurf
+		self.tex.Reload()
 	def Render(self):
 		glPushAttrib(GL_ENABLE_BIT)
 		glDisable(GL_TEXTURE_2D)
@@ -123,14 +134,7 @@ class Label(Widget):
 			glRectdv((-1, -1), (1, 1))
 		if self.text:
 			if self.text is not self._oldtext:
-				fcol=self.fcol
-				if fcol is None:
-					fcol=Vector(1, 1, 1)
-				tsurf=self.font.render(self.text, True, tuple(255*fcol.FastTo3()))
-				if self.tex is None:
-					self.tex=Texture()
-				self.tex.surf=tsurf.copy()
-				self.tex.Reload()
+				self.Update()
 				self._oldtext=self.text
 			tsz=Vector(*self.tex.surf.get_size())
 			vsz=Vector(*(glGetIntegerv(GL_VIEWPORT)[2:]))
@@ -152,9 +156,8 @@ class Label(Widget):
 				if not self.align&TALIGN.BOTTOM:
 					minima.y+=1-csz.y
 			glEnable(GL_TEXTURE_2D)
-			self.tex.Reload()
-			print 'Label', self.text, 'has TID', self.tex.id
-			#self.tex.Apply()
+			self.tex.Apply()
+##			print 'Label', self.text, 'has TID', self.tex.id, 'and surf', self.tex.surf
 			glColor4d(1, 1, 1, 1)
 			glBegin(GL_QUADS)
 			glTexCoord2d(0, 0)

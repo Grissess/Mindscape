@@ -1,3 +1,5 @@
+import random
+
 import pygame
 from pygame.locals import *
 from OpenGL.GL import *
@@ -57,11 +59,11 @@ lines.children.append(spr)
 con=Container(Grid(3, 2))
 lbl=Label(*con.grid.CellPair(0, 0), text='Hello world!', fcol=Vector(1, 0, 0, 1), bcol=Vector(0.5, 0.5, 0, 0.5))
 con.children.append(lbl)
-lbl=Label(*con.grid.CellPair(1, 0), text='I\'m fine today', align=TALIGN.LEFT, fcol=Vector(1, 0, 0, 1), bcol=Vector(0.5, 0, 0, 0.5))
-con.children.append(lbl)
-lbl=Label(*con.grid.CellPair(1, 1), text='How are you?', align=TALIGN.FILLX, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0, 0.5, 0.5))
+lbl=Label(*con.grid.CellPair(1, 0), text='I\'m fine today', align=TALIGN.LEFT|TALIGN.TOP, fcol=Vector(1, 0, 0, 1), bcol=Vector(0.5, 0, 0, 0.5))
 con.children.append(lbl)
 lbl=Label(*con.grid.CellPair(1, 2), text='I\'m great thanks!', align=TALIGN.FILLY, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0.5, 0, 0.5))
+con.children.append(lbl)
+lbl=Label(*con.grid.CellPair(1, 1), text='How are you?', align=TALIGN.FILLX, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0, 0.5, 0.5))
 con.children.append(lbl)
 sc.children.append(con)
 
@@ -77,5 +79,11 @@ while True:
 		mesh.transform.rot[0]-=360
 	with sc:
 		sc.Render()
+	if random.random()<2:
+		clist=con.children[:]
+		random.shuffle(clist)
+		for child in clist:
+			child.Update()
+		#print 'Updated a texture'
 	pygame.display.flip()
 	clock.tick(30)
