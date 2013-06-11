@@ -1,8 +1,10 @@
 Current dependencies (package names provided are as found via apt on Debian, should be the same for Ubuntu and other Debian-derivatives; if you're on Windows, just google most of them...and good luck with numpy.)
 
-Pygame (http://pygame.org/ python-pygame)
-Python bindings to OpenGL (python-opengl)
-Numpy (Numerical Python; python-numpy)
-Sphinx (for documentation generation; python-sphinx)
+(I've never seen a Linux distro missing a Python2--make sure it's Python2.7, though, and all the other packages are compatible.) (WINDOWS: http://www.python.org/ftp/python/2.7.5/python-2.7.5.msi)
+
+Pygame (http://pygame.org/ python-pygame) (WINDOWS: http://pygame.org/ftp/pygame-1.9.2a0.win32-py2.7.msi)
+Python bindings to OpenGL (python-opengl) (WINDOWS: https://pypi.python.org/packages/any/P/PyOpenGL/PyOpenGL-3.0.2.win32.exe#md5=4f1c66d6d87dcdf98ecc7ff4ce61a7e6)
+Numpy (Numerical Python; python-numpy) (WINDOWS: http://sourceforge.net/projects/numpy/files/NumPy/1.7.1/numpy-1.7.1-win32-superpack-python2.7.exe/download)
+Sphinx (for documentation generation; python-sphinx) (Let's not do this on Windows, I have enough Linux machines around to do this on most computers...)
 
 (That's all we're using so far.)
