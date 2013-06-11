@@ -67,9 +67,12 @@ lbl=Label(*con.grid.CellPair(1, 1), text='How are you?', align=TALIGN.FILLX, fco
 con.children.append(lbl)
 sc.children.append(con)
 
-print 'Viewport: ', glGetIntegerv(GL_VIEWPORT)
+##print 'Viewport: ', glGetIntegerv(GL_VIEWPORT)
+
+##print 'Textures:', Texture.ALL
 
 while True:
+##	print 'Residences:', glAreTexturesResident([i.id for i in Texture.ALL])
 	for ev in pygame.event.get():
 		if ev.type==QUIT or (ev.type==KEYDOWN and ev.key==K_ESCAPE):
 			exit()
@@ -79,11 +82,5 @@ while True:
 		mesh.transform.rot[0]-=360
 	with sc:
 		sc.Render()
-##	if random.random()<2:
-##		clist=con.children[:]
-##		random.shuffle(clist)
-##		for child in clist:
-##			child.Update()
-##		#print 'Updated a texture'
 	pygame.display.flip()
 	clock.tick(30)

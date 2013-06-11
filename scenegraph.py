@@ -118,55 +118,6 @@ the :class:`vmath.Matrix` given.'''
 		'''Apply the transformation to the current matrix.'''
 		glMultMatrixd(*numpy.array(self.matrix.flatten())[0])
 
-class Texture(Modification):
-	'''The :class:`Texture` class provides a method to load ``pygame.Surface``\ s
-into video memory and onto geometry. The actual mapping of the texture onto the
-geometry is determined by texture coordinates (see the :class:`Vertex` class) as
-well as the current mapping mode (see :class:`ModTexWrap`). This class is currently
-implemented so as to exclusively support 2D textures; however, 3D textures may
-become available shortly (and :class:`Vertex` already has support for 4D texture
-coordinates), which will make it easier (and faster, but more memory-consuming)
-to load animated textures.
-
-If the surface parameter is ``None``, the texture will be allocated, but no
-data will be uploaded to it.'''
-	def __init__(self, surf=None):
-		#: An unsigned integer which represents GL's handle to the texture.
-		self.id=glGenTextures(1)
-		#: A ``pygame.Surface`` from which the texture data is loaded.
-		self.surf=surf
-		if surf is not None:
-			self.Reload()
-	def Reload(self):
-		'''Reloads the texture memory from the surface.
-
-.. note::
-
-	You must call this after modifying the texture surface for those changes to
-	be visible in GL. This is not guaranteed to be a fast operation; video cards
-	(and their drivers) tend to prioritize speed of access over speed of uploading
-	(for obvious reasons), so this will likely not be an efficient way to animate
-	textures, and should only be done as necessary.'''
-		self.Apply()
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.surf.get_width(),
-					 self.surf.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-					 pygame.image.tostring(self.surf, 'RGBA', True))
-		glFlush()
-	def Apply(self):
-		'''Bind the texture such that it is available for the next rendering operation.'''
-		glEnable(GL_TEXTURE_2D)
-		glBindTexture(GL_TEXTURE_2D, self.id)
-	def Revert(self):
-		'''Does nothing.
-
-.. note::
-
-	If you don't want to have your geometry be affected by the texture any more,
-	disable GL_TEXTURE_2D. This is easiest done by having it so that
-	GL_TEXTURE_2D is enabled only so long as that geometry is rendering--by
-	putting it in the :attr:`Renderable.enable` set.'''
-		pass #XXX Should we actually rebind the old texture? What if there isn't one?
-
 class ModBlendFunc(Modification):
 	'''This is a simple :class:`Modification` which changes the current GL
 blend function. The arguments are expected to be equivalent to the glBlendFunc
@@ -255,6 +206,71 @@ Currently, reversion is not supported, but it probably will be.'''
 
 	Todo!'''
 		pass #XXX This one might actually be a problem...
+
+class Texture(Modification):
+	'''The :class:`Texture` class provides a method to load ``pygame.Surface``\ s
+into video memory and onto geometry. The actual mapping of the texture onto the
+geometry is determined by texture coordinates (see the :class:`Vertex` class) as
+well as the current mapping mode (see :class:`ModTexWrap`). This class is currently
+implemented so as to exclusively support 2D textures; however, 3D textures may
+become available shortly (and :class:`Vertex` already has support for 4D texture
+coordinates), which will make it easier (and faster, but more memory-consuming)
+to load animated textures.
+
+If the surface parameter is ``None``, the texture will be allocated, but no
+data will be uploaded to it.'''
+	#: A ``set`` of all active Texture objects (class attr)
+	ALL=set()
+	#: The default :class:`ModTexFilter` if none is specified in the constructor (class attr)
+	DEFAULT_FILTER=ModTexFilter(GL_LINEAR, GL_LINEAR)
+	#: The default :class:`ModTexWrap` if none is specified in the constructor (class attr)
+	DEFAULT_WRAP=ModTexWrap(GL_REPEAT, GL_REPEAT)
+	def __init__(self, surf=None, filter=None, wrap=None):
+		#: An unsigned integer which represents GL's handle to the texture.
+		self.id=glGenTextures(1)
+		#: A ``pygame.Surface`` from which the texture data is loaded.
+		self.surf=surf
+		#: A :class:`ModTexFilter` specifying how the texture is to be filtered.
+		self.filter=(self.DEFAULT_FILTER if filter is None else filter)
+		#: A :class:`ModTexWrap` specifying how the coordinates are to be wrapped.
+		self.wrap=(self.DEFAULT_WRAP if wrap is None else wrap)
+		if surf is not None:
+			self.Reload()
+		self.ALL.add(self)
+	def __del__(self):
+		self.ALL.discard(self)
+	def Reload(self):
+		'''Reloads the texture memory from the surface and applies necessary
+texture parameters.
+
+.. note::
+
+	You must call this after modifying the texture surface for those changes to
+	be visible in GL. This is not guaranteed to be a fast operation; video cards
+	(and their drivers) tend to prioritize speed of access over speed of uploading
+	(for obvious reasons), so this will likely not be an efficient way to animate
+	textures, and should only be done as necessary.'''
+		self.Apply()
+		self.filter.Apply()
+		self.wrap.Apply()
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.surf.get_width(),
+					 self.surf.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+					 pygame.image.tostring(self.surf, 'RGBA', True))
+		glFlush()
+	def Apply(self):
+		'''Bind the texture such that it is available for the next rendering operation.'''
+		glEnable(GL_TEXTURE_2D)
+		glBindTexture(GL_TEXTURE_2D, self.id)
+	def Revert(self):
+		'''Does nothing.
+
+.. note::
+
+	If you don't want to have your geometry be affected by the texture any more,
+	disable GL_TEXTURE_2D. This is easiest done by having it so that
+	GL_TEXTURE_2D is enabled only so long as that geometry is rendering--by
+	putting it in the :attr:`Renderable.enable` set.'''
+		pass #XXX Should we actually rebind the old texture? What if there isn't one?
 
 class Renderable(object):
 	'''The :class:`Renderable` class implements anything and everything that
