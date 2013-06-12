@@ -41,8 +41,19 @@ class KBD:
 class MOUSE:
 	'''An enumeration containing event subtypes for the :attr:`EVENT.MOUSE` event.'''
 	#: A mouse button was pressed.
+	#:
+	#: .. note::
+	#:
+	#:    Some genius at SDL/pygame decided to make the ``buttons`` sequence for
+	#:    the :attr:`MOVE` event zero-based, but to have all the ``button`` ints
+	#:    in the down/up events one-based. Mindscape fixes that for you; all
+	#:    buttons are zero-based.
 	BUTTONDOWN=1
 	#: A mouse button was released.
+	#:
+	#: .. note::
+	#:
+	#:    See :attr:`BUTTONDOWN`.
 	BUTTONUP=2
 	#: The mouse wheel was scrolled (or pivoted on some axis).
 	#:
@@ -60,6 +71,12 @@ class MOUSE:
 	#:    coaxed into lying about it.
 	WHEEL=3
 	#: The cursor was moved.
+	#:
+	#: .. note::
+	#:
+	#:    While technically true of all mouse events, the ``pos`` attribute is
+	#:    cast to be a :class:`vmath.Vector`, not a tuple, as is the ``rel``
+	#:    attribute.
 	MOVE=4
 
 class Event(object):
@@ -89,11 +106,13 @@ the specified event type given as a positional parameter, if one is provided.'''
 		elif ev.type==MOUSEBUTTONDOWN:
 			pygame.event.set_grab(True)
 			height=pygame.display.get_surface().get_height()
-			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONDOWN, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button)
+			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONDOWN, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button-1)
 		elif ev.type==MOUSEBUTTONUP:
 			pygame.event.set_grab(False)
 			height=pygame.display.get_surface().get_height()
-			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONUP, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button)
+			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONUP, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button-1)
+	def __repr__(self):
+		return '<Event '+' '.join(['='.join((k, repr(v))) for k, v in self.__dict__.iteritems()])+'>'
 
 class EventHandler(object):
 	def Trigger(self, ev):

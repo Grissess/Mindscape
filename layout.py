@@ -233,6 +233,7 @@ and :attr:`grab` attributes, if they are set.
 	attribute will simply propagate to all children, as usual. This means you
 	can use the same behavior in your position-sensitive events, as well.'''
 		if ev.type==EVENT.MOUSE and self.grab is not None:
+##			print 'Grabbed event sent to', self.grab
 			self.grab.Trigger(ev)
 			return
 		if ev.type==EVENT.KBD and self.focus is not None:
@@ -265,6 +266,7 @@ and :attr:`grab` attributes, if they are set.
 
 	See :func:`SetFocus`.'''
 		self.grab=grab
+##		print 'Grab set to', grab
 
 class ALIGN:
 	'''An enumeration class of legal values for :attr:`Label.align` and similar
@@ -479,6 +481,7 @@ should probably be used instead.'''
 		glPopAttrib()
 	def Handle(self, ev):
 		if ev.type==EVENT.MOUSE:
+##			print 'Mouse event:', ev
 			if ev.subtype==MOUSE.BUTTONDOWN and ev.button==0:
 				self.parent.SetGrab(self)
 				self.parent.SetFocus(self)
