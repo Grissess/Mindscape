@@ -291,7 +291,13 @@ there). Keep this inheritance in mind when considering how to, e.g., move a
 :class:`Mesh`, change the texture of a :class:`WSSprite`, etc.'''
 	def __init__(self, *children, **kwargs):
 		#: A list of :class:`Renderable`\ s, which may be empty.
-		self.children=list(children)
+		self.children=[]
+		#: A :class:`Renderable` of which this is a child, or ``None``.
+		self.parent=kwargs.get('parent', None)
+		if self.parent is not None:
+			self.SetParent(self.parent) #Initializes the relationship proper
+		for child in children:
+			child.SetParent(self)
 		#: A :class:`Transform` to be applied before rendering; defaults to an empty :class:`PRSTransform`.
 		self.transform=kwargs.get('transform', PRSTransform())
 		#: A ``set`` of states to be enabled before rendering; defaults to an empty set.
@@ -375,6 +381,36 @@ This is intended to be called from within a defined :func:`Render` method.
 	See :func:`event.EventHandler.Trigger`.'''
 		for child in self.children:
 			child.Trigger(ev)
+	def SetParent(self, par):
+		'''Set the parent of this :class:`Renderable`. The state at which this
+renderable enters its :func:`Render` method will now be a subset of the states
+set up by the parent; this object will be appended to the :attr:`children` of
+the parent, and the :attr:`parent` on this :class:`Renderable` will be set
+appropriately. If a parent was previously set, it will be cleared.
+
+.. note::
+
+	This operation will never fail.'''
+		self.ClearParent()
+		self.parent=par
+		par.children.append(self)
+	def ClearParent(self):
+		'''Clears the parent of this :class:`Renderable`, if one exists. It is
+thereby removed from that tree, and will not render if that tree contains the
+:class:`Scene` (or :class:`Scene`\ s) that are being rendered. This renderable
+is removed from the :attr:`children` collection of the parent, and this object's
+:attr:`parent` is set to ``None``.
+
+
+.. note::
+
+	This operation will never fail.'''
+		if self.parent is not None:
+			try:
+				self.parent.children.remove(self)
+			except ValueError:
+				pass
+			self.parent=None
 
 class Camera(Renderable):
 	'''This class is the base class to two more specific cameras, but it also
