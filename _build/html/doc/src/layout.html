@@ -1,0 +1,659 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>layout – Layout Manager &mdash; Mindscape 0.0-prealpha documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0-prealpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Mindscape 0.0-prealpha documentation" href="../../index.html" />
+    <link rel="up" title="API Reference" href="index.html" />
+    <link rel="prev" title="scenegraph – Scene Graph" href="scenegraph.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scenegraph.html" title="scenegraph – Scene Graph"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-layout"></span><div class="section" id="layout-layout-manager">
+<h1>layout &#8211; Layout Manager<a class="headerlink" href="#layout-layout-manager" title="Permalink to this headline">¶</a></h1>
+<p>This module provides an interface to a simple layout manager which is entirely
+compatible with the scenegraph (provided that it is rendered after 3D geometry
+and with the depth test turned off). The layout manager is a <em>tiling</em> manager,
+which means that it deals with <a class="reference internal" href="#layout.Grid" title="layout.Grid"><tt class="xref py py-class docutils literal"><span class="pre">Grid</span></tt></a>s.</p>
+<dl class="class">
+<dt id="layout.LayoutCell">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">LayoutCell</tt><big>(</big><em>weight=1.0</em>, <em>fixed=0</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#LayoutCell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.LayoutCell" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a> represents a single cell in a layout facility. In
+particular, once computations have been undergone by the manager holding (a set)
+of these cells, the <a class="reference internal" href="#layout.LayoutCell.offset" title="layout.LayoutCell.offset"><tt class="xref py py-attr docutils literal"><span class="pre">offset</span></tt></a> and <a class="reference internal" href="#layout.LayoutCell.size" title="layout.LayoutCell.size"><tt class="xref py py-attr docutils literal"><span class="pre">size</span></tt></a> attributes should represent
+the (window coordinate) space that this cell takes up, on one dimension. (Two
+cells are needed for two dimensions.)</p>
+<dl class="attribute">
+<dt id="layout.LayoutCell.weight">
+<tt class="descname">weight</tt><em class="property"> = None</em><a class="headerlink" href="#layout.LayoutCell.weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>A floating point number indicating how much space this cell should be given relative to other cells in the same layout.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.LayoutCell.fixed">
+<tt class="descname">fixed</tt><em class="property"> = None</em><a class="headerlink" href="#layout.LayoutCell.fixed" title="Permalink to this definition">¶</a></dt>
+<dd><p>A numeric amount of fixed space this cell must contain (measured in the window coordinate system).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.LayoutCell.offset">
+<tt class="descname">offset</tt><em class="property"> = None</em><a class="headerlink" href="#layout.LayoutCell.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>The offset from the origin on the dimension specifying this cell (-1 if not computed or not in a layout).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.LayoutCell.size">
+<tt class="descname">size</tt><em class="property"> = None</em><a class="headerlink" href="#layout.LayoutCell.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of this cell on this dimension (-1 if not computed or not in a layout).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.LayoutVector">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">LayoutVector</tt><big>(</big><em>*cells</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#LayoutVector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.LayoutVector" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a> contains a vector (well, a list) of cells arranged
+along one dimension. The layout may be computed against a dimensional measure
+(in any coordinate system, though typically the window coordinate system is used
+for compatibility with the rest of this module), and the <a class="reference internal" href="#layout.LayoutCell.offset" title="layout.LayoutCell.offset"><tt class="xref py py-attr docutils literal"><span class="pre">LayoutCell.offset</span></tt></a>
+and <a class="reference internal" href="#layout.LayoutCell.size" title="layout.LayoutCell.size"><tt class="xref py py-attr docutils literal"><span class="pre">LayoutCell.size</span></tt></a> attributes will be set appropriately.</p>
+<p>The constructor may be given either one parameter (the number of <a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a>s
+to construct), or an arbitrary number of positional parameters containing
+<a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a>s or derivatives thereof (or, really, any object implementing
+that interface).</p>
+<p>Furthermore, <tt class="docutils literal"><span class="pre">__getitem__</span></tt>, <tt class="docutils literal"><span class="pre">__len__</span></tt>, and <tt class="docutils literal"><span class="pre">__iter__</span></tt> are implemented,
+and defer calls to the underlying cell collection.</p>
+<dl class="method">
+<dt id="layout.LayoutVector.Compute">
+<tt class="descname">Compute</tt><big>(</big><em>dim</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#LayoutVector.Compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.LayoutVector.Compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the layout of the cells along this dimension, assuming a size
+along this dimensions of the argument given.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.Grid">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Grid</tt><big>(</big><em>rows</em>, <em>cols</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.Grid" title="layout.Grid"><tt class="xref py py-class docutils literal"><span class="pre">Grid</span></tt></a> is basically just two <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a>s on
+perpendicular axes, with a convenience function (<a class="reference internal" href="#layout.Grid.CellPair" title="layout.Grid.CellPair"><tt class="xref py py-func docutils literal"><span class="pre">CellPair()</span></tt></a>) to return
+the two cells (as a tuple) at the specified indices.</p>
+<p>The constructor expects two parameters, which may either be integers (specifying
+the number of cells to construct on that axis) or a <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a>, subclass,
+or implementor of that interface.</p>
+<dl class="attribute">
+<dt id="layout.Grid.rows">
+<tt class="descname">rows</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Grid.rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a> specifying layout along the Y axis.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Grid.cols">
+<tt class="descname">cols</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Grid.cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a> specifyinh layout along the X axis.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Grid.Compute">
+<tt class="descname">Compute</tt><big>(</big><em>dims</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Grid.Compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Grid.Compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute all <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a>s from the dimension <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a>
+given.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Grid.CellPair">
+<tt class="descname">CellPair</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Grid.CellPair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Grid.CellPair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple <tt class="docutils literal"><span class="pre">(:class:`LayoutCell`,</span> <span class="pre">:class:`LayoutCell`)</span></tt> as
+specified by the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt> parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.EVENT">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">EVENT</tt><a class="reference internal" href="../../_modules/layout.html#EVENT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.EVENT" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration containing valid values for <a class="reference internal" href="#layout.Event.type" title="layout.Event.type"><tt class="xref py py-attr docutils literal"><span class="pre">Event.type</span></tt></a>.</p>
+<dl class="attribute">
+<dt id="layout.EVENT.KBD">
+<tt class="descname">KBD</tt><em class="property"> = 1</em><a class="headerlink" href="#layout.EVENT.KBD" title="Permalink to this definition">¶</a></dt>
+<dd><p>An event relating to the keyboard (key down, key up, character, ...)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.EVENT.MOUSE">
+<tt class="descname">MOUSE</tt><em class="property"> = 2</em><a class="headerlink" href="#layout.EVENT.MOUSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>An event relating to the mouse (button press, release, mouse move, ...)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.Event">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Event</tt><big>(</big><em>type</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> contains all of the information needed to pass an
+event to a system which uses events.</p>
+<p>Events may be given arbitrary attributes from the keyword arguments passed to
+the constructor. A later <tt class="docutils literal"><span class="pre">type=...</span></tt> in the keyword arguments will override
+the specified event type given as a positional parameter, if one is provided.</p>
+<dl class="attribute">
+<dt id="layout.Event.type">
+<tt class="descname">type</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Event.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>The event type (one of the <a class="reference internal" href="#layout.EVENT" title="layout.EVENT"><tt class="xref py py-class docutils literal"><span class="pre">EVENT</span></tt></a> values). Other attributes depend on the event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.Widget">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Widget</tt><big>(</big><em>xcell</em>, <em>ycell</em>, <em>fcol=None</em>, <em>bcol=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> is a special type of <a class="reference internal" href="scenegraph.html#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Renderable</span></tt></a>
+that expects to be in an environment where:</p>
+<ul class="simple">
+<li>The projection and modelview matrices are identity, giving a precise mapping
+between input (vertex) coordinates and normalized device coordinates, <em>but</em></li>
+<li>the viewport is set so that the rendering bounds are only a small portion of
+the window&#8211;specified by the cell pair given.</li>
+</ul>
+<p>As such, the <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.PushState" title="scenegraph.Renderable.PushState"><tt class="xref py py-func docutils literal"><span class="pre">scenegraph.Renderable.PushState()</span></tt></a> and <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.PopState" title="scenegraph.Renderable.PopState"><tt class="xref py py-func docutils literal"><span class="pre">scenegraph.Renderable.PopState()</span></tt></a>
+functions are overriden (such that the <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.enable" title="scenegraph.Renderable.enable"><tt class="xref py py-attr docutils literal"><span class="pre">scenegraph.Renderable.enable</span></tt></a>,
+<a class="reference internal" href="scenegraph.html#scenegraph.Renderable.disable" title="scenegraph.Renderable.disable"><tt class="xref py py-attr docutils literal"><span class="pre">scenegraph.Renderable.disable</span></tt></a>, and <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.modifications" title="scenegraph.Renderable.modifications"><tt class="xref py py-attr docutils literal"><span class="pre">scenegraph.Renderable.modifications</span></tt></a>
+will <em>not</em> work). Their primary job is to set up the viewport, as specified
+above. (The matrices are assumed to be identity beforehand, an assumption usually
+guaranteed by an enclosing <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a>).</p>
+<p>The <tt class="docutils literal"><span class="pre">xcell</span></tt> and <tt class="docutils literal"><span class="pre">ycell</span></tt> parameters should be set to a cell on corresponding
+layout axes.</p>
+<dl class="attribute">
+<dt id="layout.Widget.xcell">
+<tt class="descname">xcell</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Widget.xcell" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a> along the x axis.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Widget.ycell">
+<tt class="descname">ycell</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Widget.ycell" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a> along the y axis.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Widget.fcol">
+<tt class="descname">fcol</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Widget.fcol" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> cotaining the foreground color, or <tt class="docutils literal"><span class="pre">None</span></tt> (whose application differs per widget).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Widget.bcol">
+<tt class="descname">bcol</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Widget.bcol" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> containing the background color, or <tt class="docutils literal"><span class="pre">None</span></tt> (whose application differs per widget).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Widget.pos">
+<tt class="descname">pos</tt><a class="reference internal" href="../../_modules/layout.html#Widget.pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> containing the cell positions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Widget.size">
+<tt class="descname">size</tt><a class="reference internal" href="../../_modules/layout.html#Widget.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> containing the cell sizes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Widget.PushState">
+<tt class="descname">PushState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.PushState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.PushState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the state (basically, push and set the viewport).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This does not respect any of the other <a class="reference internal" href="scenegraph.html#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Renderable</span></tt></a>
+attributes, including <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.enable" title="scenegraph.Renderable.enable"><tt class="xref py py-attr docutils literal"><span class="pre">scenegraph.Renderable.enable</span></tt></a>,
+<a class="reference internal" href="scenegraph.html#scenegraph.Renderable.disable" title="scenegraph.Renderable.disable"><tt class="xref py py-attr docutils literal"><span class="pre">scenegraph.Renderable.disable</span></tt></a>, <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.modifications" title="scenegraph.Renderable.modifications"><tt class="xref py py-attr docutils literal"><span class="pre">scenegraph.Renderable.modifications</span></tt></a>,
+and so on.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Widget.PopState">
+<tt class="descname">PopState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.PopState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.PopState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the state (basically, pop the viewport).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Widget.Trigger">
+<tt class="descname">Trigger</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.Trigger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.Trigger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigger an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Triggering an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> is not the same as handling an event; triggering
+will inevitably cause handling by this <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>, and may cause handling
+by children (based on the propagation policy&#8211;how the <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> defines
+<a class="reference internal" href="#layout.Widget.TriggerChildren" title="layout.Widget.TriggerChildren"><tt class="xref py py-func docutils literal"><span class="pre">TriggerChildren()</span></tt></a>. Handling the <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> is done by <a class="reference internal" href="#layout.Widget.Handle" title="layout.Widget.Handle"><tt class="xref py py-func docutils literal"><span class="pre">Handle()</span></tt></a>,
+which actually causes the <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> to process the event.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Widget.Handle">
+<tt class="descname">Handle</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.Handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.Handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hanle an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a>. By default, this does nothing.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="#layout.Widget.Trigger" title="layout.Widget.Trigger"><tt class="xref py py-func docutils literal"><span class="pre">Trigger()</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Widget.TriggerChildren">
+<tt class="descname">TriggerChildren</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.TriggerChildren"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.TriggerChildren" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagate an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> to child <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="#layout.Widget.Trigger" title="layout.Widget.Trigger"><tt class="xref py py-func docutils literal"><span class="pre">Trigger()</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.Container">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Container</tt><big>(</big><em>grid</em>, <em>xcell=None</em>, <em>ycell=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a> is a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> that contains other <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s.
+In particular, a <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a> is special in that it can accept an
+<a class="reference internal" href="#layout.Widget.xcell" title="layout.Widget.xcell"><tt class="xref py py-attr docutils literal"><span class="pre">Widget.xcell</span></tt></a> and <a class="reference internal" href="#layout.Widget.ycell" title="layout.Widget.ycell"><tt class="xref py py-attr docutils literal"><span class="pre">Widget.ycell</span></tt></a> value of <tt class="docutils literal"><span class="pre">None</span></tt>, implying that
+this container is the <em>top-level container</em>, which causes it to do useful duties
+(like set up the identity matrices; see <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>).</p>
+<p>Containers always have a layout system&#8211;presently, <tt class="xref py py-attr docutils literal"><span class="pre">grid</span></tt> (though the name
+is subject to change). It is logical (but not required) to put <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s
+that are in this layout system as children of the <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a>. Other
+<a class="reference internal" href="scenegraph.html#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Renderable</span></tt></a>s should not be made children of <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a>s
+due to the odd circumstances under which <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s are rendered.</p>
+<dl class="method">
+<dt id="layout.Container.PushState">
+<tt class="descname">PushState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.PushState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.PushState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the state. Depending on whether this is a top-level
+container, this may initialize the matrices (without affecting the viewport),
+or it may just set a viewport as with the usual <a class="reference internal" href="#layout.Widget.PushState" title="layout.Widget.PushState"><tt class="xref py py-func docutils literal"><span class="pre">Widget.PushState()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Container.PopState">
+<tt class="descname">PopState</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.PopState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.PopState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverts the state, undoing the actions done during <a class="reference internal" href="#layout.Container.PushState" title="layout.Container.PushState"><tt class="xref py py-func docutils literal"><span class="pre">PushState()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Container.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a> (which actually does nothing but
+renders its children via <a class="reference internal" href="scenegraph.html#scenegraph.Renderable.RenderChildren" title="scenegraph.Renderable.RenderChildren"><tt class="xref py py-func docutils literal"><span class="pre">scenegraph.Renderable.RenderChildren()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Container.CellsAt">
+<tt class="descname">CellsAt</tt><big>(</big><em>pos</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.CellsAt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.CellsAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple <tt class="docutils literal"><span class="pre">(:class:`LayoutCell`,</span> <span class="pre">:class:`LayoutCell`)</span></tt> that
+represents the cell pair at the given position in the layout held by this
+<a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a>. This may be used for various sorts of hit-testing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Container.ChildAt">
+<tt class="descname">ChildAt</tt><big>(</big><em>pos</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.ChildAt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.ChildAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> at the position specified, if one exists
+there; otherwise, returns <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Container.TriggerChildren">
+<tt class="descname">TriggerChildren</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.TriggerChildren"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.TriggerChildren" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overrides the default propagation behavior by ensuring that
+<a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> objects with a <tt class="docutils literal"><span class="pre">pos</span></tt> attribute are dispatched only to
+<a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> objects in that position.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This special naming convention is all-inclusive; <em>any</em> <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> with
+a <tt class="docutils literal"><span class="pre">pos</span></tt> attribute will be propagated thusly, and any without a <tt class="docutils literal"><span class="pre">pos</span></tt>
+attribute will simply propagate to all children, as usual. This means you
+can use the same behavior in your position-sensitive events, as well.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.ALIGN">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">ALIGN</tt><a class="reference internal" href="../../_modules/layout.html#ALIGN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.ALIGN" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration class of legal values for <a class="reference internal" href="#layout.Label.align" title="layout.Label.align"><tt class="xref py py-attr docutils literal"><span class="pre">Label.align</span></tt></a> and similar
+attributes in derived classes.</p>
+<dl class="attribute">
+<dt id="layout.ALIGN.LEFT">
+<tt class="descname">LEFT</tt><em class="property"> = 1</em><a class="headerlink" href="#layout.ALIGN.LEFT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align the left edge with the left edge of the cell.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.CENTER">
+<tt class="descname">CENTER</tt><em class="property"> = 0</em><a class="headerlink" href="#layout.ALIGN.CENTER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Center the object in the cell horizontally.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is the default, so its value is 0, and it is not effective with the other attributes.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.RIGHT">
+<tt class="descname">RIGHT</tt><em class="property"> = 2</em><a class="headerlink" href="#layout.ALIGN.RIGHT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align the right edge with the right edge of the cell.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.TOP">
+<tt class="descname">TOP</tt><em class="property"> = 4</em><a class="headerlink" href="#layout.ALIGN.TOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align the top edge with the top edge of the cell.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.MIDDLE">
+<tt class="descname">MIDDLE</tt><em class="property"> = 0</em><a class="headerlink" href="#layout.ALIGN.MIDDLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Center the object in the cell vertically.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is the default, so its value is 0, and it is not effective with the other attributes.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.BOTTOM">
+<tt class="descname">BOTTOM</tt><em class="property"> = 8</em><a class="headerlink" href="#layout.ALIGN.BOTTOM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align the bottom edge with the bottom edge of the cell.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.FILLX">
+<tt class="descname">FILLX</tt><em class="property"> = 3</em><a class="headerlink" href="#layout.ALIGN.FILLX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the entire horizontal expanse, stretching the object if necessary. (Equivalent to LEFT|RIGHT.)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ALIGN.FILLY">
+<tt class="descname">FILLY</tt><em class="property"> = 12</em><a class="headerlink" href="#layout.ALIGN.FILLY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the entire vertical expanse, stretching the object if necessary. (Equivalent to TOP|BOTTOM.)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.Label">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Label</tt><big>(</big><em>xcell</em>, <em>ycell</em>, <em>text=''</em>, <em>align=0</em>, <em>font=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Label" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#layout.Label" title="layout.Label"><tt class="xref py py-class docutils literal"><span class="pre">Label</span></tt></a> is a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> designed to display text.</p>
+<p>Since this function is useful to some other <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s, it&#8217;s also the
+base class for a few.</p>
+<dl class="attribute">
+<dt id="layout.Label.text">
+<tt class="descname">text</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Label.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>A string containing the text to display.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Label.align">
+<tt class="descname">align</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Label.align" title="Permalink to this definition">¶</a></dt>
+<dd><p>The alignment mode (a <a class="reference internal" href="#layout.ALIGN" title="layout.ALIGN"><tt class="xref py py-class docutils literal"><span class="pre">ALIGN</span></tt></a> bit mask).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Label.font">
+<tt class="descname">font</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Label.font" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <tt class="docutils literal"><span class="pre">pygame.Font</span></tt> object to use for rendering.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Label.tex">
+<tt class="descname">tex</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Label.tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="scenegraph.html#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Texture</span></tt></a> used to store the font texture.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Label.Update">
+<tt class="descname">Update</tt><big>(</big><em>text=None</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Label.Update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Label.Update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the Label, drawing the new <a class="reference internal" href="#layout.Label.text" title="layout.Label.text"><tt class="xref py py-attr docutils literal"><span class="pre">text</span></tt></a> to the <a class="reference internal" href="#layout.Label.tex" title="layout.Label.tex"><tt class="xref py py-attr docutils literal"><span class="pre">tex</span></tt></a>
+<a class="reference internal" href="scenegraph.html#scenegraph.Texture" title="scenegraph.Texture"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Texture</span></tt></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This is done automatically whenever <a class="reference internal" href="#layout.Label.text" title="layout.Label.text"><tt class="xref py py-attr docutils literal"><span class="pre">text</span></tt></a> is no longer determined to
+be the same object as before. Since strings in Python are immutable, this
+must be the case if the value is no longer the same as well. However, this
+process is <em>not</em> performed if the <a class="reference internal" href="#layout.Widget.fcol" title="layout.Widget.fcol"><tt class="xref py py-attr docutils literal"><span class="pre">Widget.fcol</span></tt></a> attribute is changed
+(which determines the font color), and so it must be either called manually
+from code that does this, or the <a class="reference internal" href="#layout.Label.text" title="layout.Label.text"><tt class="xref py py-attr docutils literal"><span class="pre">text</span></tt></a> attribute must be changed to
+a different object. A trivial way of performing the latter is assigning
+<tt class="docutils literal"><span class="pre">label.text=str(label.text)</span></tt>.</p>
+<p class="last">This behavior may change in later versions to update when the color is changed
+as well.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Label.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Label.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Label.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the label using the current viewport.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Label.RenderText">
+<tt class="descname">RenderText</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Label.RenderText"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Label.RenderText" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the text&#8211;a process which is usable by subclasses as needed.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>While GL_ENABLE_BIT is pushed before rendering, GL_TEXTURE_2D is still
+generally enabled after this process. You&#8217;ll want to disable it before
+doing your own rendering after calling this, as the 0, 0 texel generally
+has an alpha value of 0.</p>
+<p class="last">This is a known bug and will be fixed.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.ORIENT">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">ORIENT</tt><a class="reference internal" href="../../_modules/layout.html#ORIENT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.ORIENT" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration of legal values for the <a class="reference internal" href="#layout.Slider.orient" title="layout.Slider.orient"><tt class="xref py py-attr docutils literal"><span class="pre">Slider.orient</span></tt></a> attribute.</p>
+<dl class="attribute">
+<dt id="layout.ORIENT.HORIZONTAL">
+<tt class="descname">HORIZONTAL</tt><em class="property"> = 0</em><a class="headerlink" href="#layout.ORIENT.HORIZONTAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orient horizontally, along the X axis.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.ORIENT.VERTICAL">
+<tt class="descname">VERTICAL</tt><em class="property"> = 1</em><a class="headerlink" href="#layout.ORIENT.VERTICAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orient vertically, along the Y axis.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="layout.Slider">
+<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Slider</tt><big>(</big><em>xcell</em>, <em>ycell</em>, <em>value=0</em>, <em>min=0</em>, <em>max=1</em>, <em>mapfunc=None</em>, <em>showval=True</em>, <em>orient=0</em>, <em>hwidth=0.05</em>, <em>hcol=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Slider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Slider" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#layout.Slider" title="layout.Slider"><tt class="xref py py-class docutils literal"><span class="pre">Slider</span></tt></a> is a type of widget that allows a user to manipulate a
+value by providing an axis between two extreme values; the user is expected to
+use the mouse to select the value as a point within this range; the value is
+readable as the <a class="reference internal" href="#layout.Slider.value" title="layout.Slider.value"><tt class="xref py py-attr docutils literal"><span class="pre">value</span></tt></a> attribute.</p>
+<dl class="attribute">
+<dt id="layout.Slider.value">
+<tt class="descname">value</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The actual value of this <a class="reference internal" href="#layout.Slider" title="layout.Slider"><tt class="xref py py-class docutils literal"><span class="pre">Slider</span></tt></a>, as modified by the user (and possibly mapped by <a class="reference internal" href="#layout.Slider.mapfunc" title="layout.Slider.mapfunc"><tt class="xref py py-attr docutils literal"><span class="pre">mapfunc</span></tt></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.min">
+<tt class="descname">min</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.min" title="Permalink to this definition">¶</a></dt>
+<dd><p>The smallest value this should contain.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.max">
+<tt class="descname">max</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.max" title="Permalink to this definition">¶</a></dt>
+<dd><p>The largest value this should contain.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.mapfunc">
+<tt class="descname">mapfunc</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.mapfunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function called with the raw, floating-point value from the user input, whose return is mapped to <a class="reference internal" href="#layout.Slider.value" title="layout.Slider.value"><tt class="xref py py-attr docutils literal"><span class="pre">value</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.showval">
+<tt class="descname">showval</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.showval" title="Permalink to this definition">¶</a></dt>
+<dd><p>True to display the value as a text object (which obeys <a class="reference internal" href="#layout.Label" title="layout.Label"><tt class="xref py py-class docutils literal"><span class="pre">Label</span></tt></a> attributes like <a class="reference internal" href="#layout.Label.align" title="layout.Label.align"><tt class="xref py py-attr docutils literal"><span class="pre">Label.align</span></tt></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.orient">
+<tt class="descname">orient</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.orient" title="Permalink to this definition">¶</a></dt>
+<dd><p>The orientation (a <a class="reference internal" href="#layout.ORIENT" title="layout.ORIENT"><tt class="xref py py-class docutils literal"><span class="pre">ORIENT</span></tt></a> constant).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.hwidth">
+<tt class="descname">hwidth</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.hwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>The floating-point width of the slide handle in normalized device coordinates (where 1 would be half the viewport).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.hcol">
+<tt class="descname">hcol</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Slider.hcol" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 4D <a class="reference internal" href="vmath.html#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">vmath.Vector</span></tt></a> color of the slide handle (or <tt class="docutils literal"><span class="pre">None</span></tt> for the default transparent gray).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.range">
+<tt class="descname">range</tt><a class="reference internal" href="../../_modules/layout.html#Slider.range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Slider.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The computed difference between <a class="reference internal" href="#layout.Slider.max" title="layout.Slider.max"><tt class="xref py py-attr docutils literal"><span class="pre">max</span></tt></a> and <a class="reference internal" href="#layout.Slider.min" title="layout.Slider.min"><tt class="xref py py-attr docutils literal"><span class="pre">min</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="layout.Slider.ratio">
+<tt class="descname">ratio</tt><a class="reference internal" href="../../_modules/layout.html#Slider.ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Slider.ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>The position of <a class="reference internal" href="#layout.Slider.value" title="layout.Slider.value"><tt class="xref py py-attr docutils literal"><span class="pre">value</span></tt></a> normalized such that the minimal point
+is 0 and the maximal point is 1.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="layout.Slider.Step">
+<em class="property">static </em><tt class="descname">Step</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Slider.Step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Slider.Step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a lambda function that may be used as a value for <a class="reference internal" href="#layout.Slider.mapfunc" title="layout.Slider.mapfunc"><tt class="xref py py-attr docutils literal"><span class="pre">mapfunc</span></tt></a>.
+The return function will produce values <tt class="docutils literal"><span class="pre">x</span></tt> such that <tt class="docutils literal"><span class="pre">x*n</span></tt> is an integer
+(barring round-off error), or, alternatively, will clamp values to <tt class="docutils literal"><span class="pre">1/n</span></tt> increments.</p>
+<p>Calling this with <tt class="docutils literal"><span class="pre">n==1</span></tt> will result in an analogue to the <tt class="docutils literal"><span class="pre">int</span></tt> function, which
+should probably be used instead.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="layout.Slider.Render">
+<tt class="descname">Render</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/layout.html#Slider.Render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Slider.Render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the slider.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="scenegraph.html"
+                        title="previous chapter">scenegraph &#8211; Scene Graph</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/doc/src/layout.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scenegraph.html" title="scenegraph – Scene Graph"
+             >previous</a> |</li>
+        <li><a href="../../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Grissess, PaulTagg, Niles, et. al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

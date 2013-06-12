@@ -1,0 +1,572 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>layout &mdash; Mindscape 0.0-prealpha documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0-prealpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Mindscape 0.0-prealpha documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for layout</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">.. mindscape -- Mindscape Engine</span>
+<span class="sd">wm -- Window Manager</span>
+<span class="sd">====================</span>
+
+<span class="sd">This module provides an interface to a simple layout manager which is entirely</span>
+<span class="sd">compatible with the scenegraph (provided that it is rendered after 3D geometry</span>
+<span class="sd">and with the depth test turned off). The layout manager is a *tiling* manager,</span>
+<span class="sd">which means that it deals with :class:`Grid`\ s.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">pygame</span>
+<span class="kn">from</span> <span class="nn">OpenGL.GL</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">vmath</span> <span class="kn">import</span> <span class="n">Vector</span>
+<span class="kn">from</span> <span class="nn">scenegraph</span> <span class="kn">import</span> <span class="n">Renderable</span><span class="p">,</span> <span class="n">Texture</span>
+
+<div class="viewcode-block" id="LayoutCell"><a class="viewcode-back" href="../doc/src/layout.html#layout.LayoutCell">[docs]</a><span class="k">class</span> <span class="nc">LayoutCell</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;A :class:`LayoutCell` represents a single cell in a layout facility. In</span>
+<span class="sd">particular, once computations have been undergone by the manager holding (a set)</span>
+<span class="sd">of these cells, the :attr:`offset` and :attr:`size` attributes should represent</span>
+<span class="sd">the (window coordinate) space that this cell takes up, on one dimension. (Two</span>
+<span class="sd">cells are needed for two dimensions.)&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+		<span class="c">#: A floating point number indicating how much space this cell should be given relative to other cells in the same layout.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span>
+		<span class="c">#: A numeric amount of fixed space this cell must contain (measured in the window coordinate system).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fixed</span><span class="o">=</span><span class="n">fixed</span>
+		<span class="c">#: The offset from the origin on the dimension specifying this cell (-1 if not computed or not in a layout).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">=-</span><span class="mi">1</span>
+		<span class="c">#: The size of this cell on this dimension (-1 if not computed or not in a layout).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">=-</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="LayoutVector"><a class="viewcode-back" href="../doc/src/layout.html#layout.LayoutVector">[docs]</a><span class="k">class</span> <span class="nc">LayoutVector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;A :class:`LayoutVector` contains a vector (well, a list) of cells arranged</span>
+<span class="sd">along one dimension. The layout may be computed against a dimensional measure</span>
+<span class="sd">(in any coordinate system, though typically the window coordinate system is used</span>
+<span class="sd">for compatibility with the rest of this module), and the :attr:`LayoutCell.offset`</span>
+<span class="sd">and :attr:`LayoutCell.size` attributes will be set appropriately.</span>
+
+<span class="sd">The constructor may be given either one parameter (the number of :class:`LayoutCell`\ s</span>
+<span class="sd">to construct), or an arbitrary number of positional parameters containing</span>
+<span class="sd">:class:`LayoutCell`\ s or derivatives thereof (or, really, any object implementing</span>
+<span class="sd">that interface).</span>
+
+<span class="sd">Furthermore, ``__getitem__``, ``__len__``, and ``__iter__`` are implemented,</span>
+<span class="sd">and defer calls to the underlying cell collection.&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">cells</span><span class="p">):</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">)):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="o">=</span><span class="p">[</span><span class="n">LayoutCell</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cells</span><span class="p">)</span>
+<div class="viewcode-block" id="LayoutVector.Compute"><a class="viewcode-back" href="../doc/src/layout.html#layout.LayoutVector.Compute">[docs]</a>	<span class="k">def</span> <span class="nf">Compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Compute the layout of the cells along this dimension, assuming a size</span>
+<span class="sd">along this dimensions of the argument given.&#39;&#39;&#39;</span>
+		<span class="n">dim</span><span class="o">-=</span><span class="nb">sum</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">fixed</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="p">])</span> <span class="c">#Remove fixed allocations from weighting</span>
+		<span class="n">wtotal</span><span class="o">=</span><span class="nb">sum</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">weight</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="p">])</span>
+		<span class="n">offset</span><span class="o">=</span><span class="mi">0</span>
+		<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="p">:</span>
+			<span class="n">cell</span><span class="o">.</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span>
+			<span class="n">cell</span><span class="o">.</span><span class="n">size</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">fixed</span><span class="o">+</span><span class="p">(</span><span class="n">dim</span><span class="o">*</span><span class="n">cell</span><span class="o">.</span><span class="n">weight</span><span class="o">/</span><span class="n">wtotal</span><span class="p">)</span>
+			<span class="n">offset</span><span class="o">+=</span><span class="n">cell</span><span class="o">.</span><span class="n">size</span></div>
+	<span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+	<span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cells</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Grid"><a class="viewcode-back" href="../doc/src/layout.html#layout.Grid">[docs]</a><span class="k">class</span> <span class="nc">Grid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;A :class:`Grid` is basically just two :class:`LayoutVector`\ s on</span>
+<span class="sd">perpendicular axes, with a convenience function (:func:`CellPair`) to return</span>
+<span class="sd">the two cells (as a tuple) at the specified indices.</span>
+
+<span class="sd">The constructor expects two parameters, which may either be integers (specifying</span>
+<span class="sd">the number of cells to construct on that axis) or a :class:`LayoutVector`, subclass,</span>
+<span class="sd">or implementor of that interface.&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+		<span class="c">#: A :class:`LayoutVector` specifying layout along the Y axis.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="o">=</span><span class="p">(</span><span class="n">LayoutVector</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">))</span> <span class="k">else</span> <span class="n">rows</span><span class="p">)</span>
+		<span class="c">#: A :class:`LayoutVector` specifyinh layout along the X axis.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">=</span><span class="p">(</span><span class="n">LayoutVector</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">))</span> <span class="k">else</span> <span class="n">cols</span><span class="p">)</span>
+<div class="viewcode-block" id="Grid.Compute"><a class="viewcode-back" href="../doc/src/layout.html#layout.Grid.Compute">[docs]</a>	<span class="k">def</span> <span class="nf">Compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dims</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Compute all :class:`LayoutVector`\ s from the dimension :class:`vmath.Vector`</span>
+<span class="sd">given.&#39;&#39;&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">Compute</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">Compute</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">x</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Grid.CellPair"><a class="viewcode-back" href="../doc/src/layout.html#layout.Grid.CellPair">[docs]</a>	<span class="k">def</span> <span class="nf">CellPair</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` as</span>
+<span class="sd">specified by the ``x`` and ``y`` parameters.&#39;&#39;&#39;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+</div></div>
+<div class="viewcode-block" id="EVENT"><a class="viewcode-back" href="../doc/src/layout.html#layout.EVENT">[docs]</a><span class="k">class</span> <span class="nc">EVENT</span><span class="p">:</span>
+	<span class="sd">&#39;&#39;&#39;An enumeration containing valid values for :attr:`Event.type`.&#39;&#39;&#39;</span>
+	<span class="c">#: An event relating to the keyboard (key down, key up, character, ...)</span>
+	<span class="n">KBD</span><span class="o">=</span><span class="mi">1</span>
+	<span class="c">#: An event relating to the mouse (button press, release, mouse move, ...)</span>
+	<span class="n">MOUSE</span><span class="o">=</span><span class="mi">2</span>
+</div>
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../doc/src/layout.html#layout.Event">[docs]</a><span class="k">class</span> <span class="nc">Event</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;An :class:`Event` contains all of the information needed to pass an</span>
+<span class="sd">event to a system which uses events.</span>
+
+<span class="sd">Events may be given arbitrary attributes from the keyword arguments passed to</span>
+<span class="sd">the constructor. A later ``type=...`` in the keyword arguments will override</span>
+<span class="sd">the specified event type given as a positional parameter, if one is provided.&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="c">#: The event type (one of the :class:`EVENT` values). Other attributes depend on the event.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">=</span><span class="nb">type</span>
+		<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+			<span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span> <span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Widget"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget">[docs]</a><span class="k">class</span> <span class="nc">Widget</span><span class="p">(</span><span class="n">Renderable</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;A :class:`Widget` is a special type of :class:`scenegraph.Renderable`</span>
+<span class="sd">that expects to be in an environment where:</span>
+
+<span class="sd">* The projection and modelview matrices are identity, giving a precise mapping</span>
+<span class="sd">  between input (vertex) coordinates and normalized device coordinates, *but*</span>
+<span class="sd">* the viewport is set so that the rendering bounds are only a small portion of</span>
+<span class="sd">  the window--specified by the cell pair given.</span>
+
+<span class="sd">As such, the :func:`scenegraph.Renderable.PushState` and :func:`scenegraph.Renderable.PopState`</span>
+<span class="sd">functions are overriden (such that the :attr:`scenegraph.Renderable.enable`,</span>
+<span class="sd">:attr:`scenegraph.Renderable.disable`, and :attr:`scenegraph.Renderable.modifications`</span>
+<span class="sd">will *not* work). Their primary job is to set up the viewport, as specified</span>
+<span class="sd">above. (The matrices are assumed to be identity beforehand, an assumption usually</span>
+<span class="sd">guaranteed by an enclosing :class:`Container`).</span>
+
+<span class="sd">The ``xcell`` and ``ycell`` parameters should be set to a cell on corresponding</span>
+<span class="sd">layout axes.&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span><span class="p">,</span> <span class="n">fcol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">bcol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">Widget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="c">#: A :class:`LayoutCell` along the x axis.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">xcell</span><span class="o">=</span><span class="n">xcell</span>
+		<span class="c">#: A :class:`LayoutCell` along the y axis.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">ycell</span><span class="o">=</span><span class="n">ycell</span>
+		<span class="c">#: A :class:`vmath.Vector` cotaining the foreground color, or ``None`` (whose application differs per widget).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fcol</span><span class="o">=</span><span class="n">fcol</span>
+		<span class="c">#: A :class:`vmath.Vector` containing the background color, or ``None`` (whose application differs per widget).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bcol</span><span class="o">=</span><span class="n">bcol</span>
+	<span class="nd">@property</span>
+<div class="viewcode-block" id="Widget.pos"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.pos">[docs]</a>	<span class="k">def</span> <span class="nf">pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;A 2D :class:`vmath.Vector` containing the cell positions.&#39;&#39;&#39;</span>
+		<span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xcell</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycell</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span></div>
+	<span class="nd">@property</span>
+<div class="viewcode-block" id="Widget.size"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.size">[docs]</a>	<span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;A 2D :class:`vmath.Vector` containing the cell sizes.&#39;&#39;&#39;</span>
+		<span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xcell</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycell</span><span class="o">.</span><span class="n">size</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Widget.PushState"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.PushState">[docs]</a>	<span class="k">def</span> <span class="nf">PushState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Initialize the state (basically, push and set the viewport).</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	This does not respect any of the other :class:`scenegraph.Renderable`</span>
+<span class="sd">	attributes, including :attr:`scenegraph.Renderable.enable`,</span>
+<span class="sd">	:attr:`scenegraph.Renderable.disable`, :attr:`scenegraph.Renderable.modifications`,</span>
+<span class="sd">	and so on.&#39;&#39;&#39;</span>
+		<span class="n">glPushAttrib</span><span class="p">(</span><span class="n">GL_VIEWPORT_BIT</span><span class="p">)</span>
+		<span class="n">glViewport</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">]))</span></div>
+<div class="viewcode-block" id="Widget.PopState"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.PopState">[docs]</a>	<span class="k">def</span> <span class="nf">PopState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Reset the state (basically, pop the viewport).&#39;&#39;&#39;</span>
+		<span class="n">glPopAttrib</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Widget.Trigger"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.Trigger">[docs]</a>	<span class="k">def</span> <span class="nf">Trigger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Trigger an :class:`Event`.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	Triggering an :class:`Event` is not the same as handling an event; triggering</span>
+<span class="sd">	will inevitably cause handling by this :class:`Widget`, and may cause handling</span>
+<span class="sd">	by children (based on the propagation policy--how the :class:`Widget` defines</span>
+<span class="sd">	:func:`TriggerChildren`. Handling the :class:`Event` is done by :func:`Handle`,</span>
+<span class="sd">	which actually causes the :class:`Widget` to process the event.&#39;&#39;&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">TriggerChildren</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Widget.Handle"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.Handle">[docs]</a>	<span class="k">def</span> <span class="nf">Handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Hanle an :class:`Event`. By default, this does nothing.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	See :func:`Trigger`.&#39;&#39;&#39;</span>
+		<span class="k">pass</span></div>
+<div class="viewcode-block" id="Widget.TriggerChildren"><a class="viewcode-back" href="../doc/src/layout.html#layout.Widget.TriggerChildren">[docs]</a>	<span class="k">def</span> <span class="nf">TriggerChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Propagate an :class:`Event` to child :class:`Widget`\ s.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	See :func:`Trigger`.&#39;&#39;&#39;</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+			<span class="n">child</span><span class="o">.</span><span class="n">Trigger</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="Container"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container">[docs]</a><span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;A :class:`Container` is a :class:`Widget` that contains other :class:`Widget`\ s.</span>
+<span class="sd">In particular, a :class:`Container` is special in that it can accept an</span>
+<span class="sd">:attr:`Widget.xcell` and :attr:`Widget.ycell` value of ``None``, implying that</span>
+<span class="sd">this container is the *top-level container*, which causes it to do useful duties</span>
+<span class="sd">(like set up the identity matrices; see :class:`Widget`).</span>
+
+<span class="sd">Containers always have a layout system--presently, :attr:`grid` (though the name</span>
+<span class="sd">is subject to change). It is logical (but not required) to put :class:`Widget`\ s</span>
+<span class="sd">that are in this layout system as children of the :class:`Container`. Other</span>
+<span class="sd">:class:`scenegraph.Renderable`\ s should not be made children of :class:`Container`\ s</span>
+<span class="sd">due to the odd circumstances under which :class:`Widget`\ s are rendered.&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">xcell</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ycell</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">Container</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">=</span><span class="n">grid</span>
+<div class="viewcode-block" id="Container.PushState"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container.PushState">[docs]</a>	<span class="k">def</span> <span class="nf">PushState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Initialize the state. Depending on whether this is a top-level</span>
+<span class="sd">container, this may initialize the matrices (without affecting the viewport),</span>
+<span class="sd">or it may just set a viewport as with the usual :func:`Widget.PushState`.&#39;&#39;&#39;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xcell</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycell</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="c">#Initialize this as if we are a master layout (we probably are)</span>
+			<span class="n">glMatrixMode</span><span class="p">(</span><span class="n">GL_PROJECTION</span><span class="p">)</span>
+			<span class="n">glPushMatrix</span><span class="p">()</span>
+			<span class="n">glLoadIdentity</span><span class="p">()</span>
+			<span class="n">glMatrixMode</span><span class="p">(</span><span class="n">GL_MODELVIEW</span><span class="p">)</span>
+			<span class="n">glPushMatrix</span><span class="p">()</span>
+			<span class="n">glLoadIdentity</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">Compute</span><span class="p">(</span><span class="n">Vector</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">glGetIntegerv</span><span class="p">(</span><span class="n">GL_VIEWPORT</span><span class="p">)[</span><span class="mi">2</span><span class="p">:])))</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">Compute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+			<span class="nb">super</span><span class="p">(</span><span class="n">Container</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">PushState</span><span class="p">()</span> <span class="c">#Just do what every other widget does</span></div>
+<div class="viewcode-block" id="Container.PopState"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container.PopState">[docs]</a>	<span class="k">def</span> <span class="nf">PopState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Reverts the state, undoing the actions done during :func:`PushState`.&#39;&#39;&#39;</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xcell</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycell</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">glMatrixMode</span><span class="p">(</span><span class="n">GL_PROJECTION</span><span class="p">)</span>
+			<span class="n">glPopMatrix</span><span class="p">()</span>
+			<span class="n">glMatrixMode</span><span class="p">(</span><span class="n">GL_MODELVIEW</span><span class="p">)</span>
+			<span class="n">glPopMatrix</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="nb">super</span><span class="p">(</span><span class="n">Container</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">PopState</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Container.Render"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container.Render">[docs]</a>	<span class="k">def</span> <span class="nf">Render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Render the :class:`Container` (which actually does nothing but</span>
+<span class="sd">renders its children via :func:`scenegraph.Renderable.RenderChildren`.&#39;&#39;&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">RenderChildren</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Container.CellsAt"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container.CellsAt">[docs]</a>	<span class="k">def</span> <span class="nf">CellsAt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` that</span>
+<span class="sd">represents the cell pair at the given position in the layout held by this</span>
+<span class="sd">:class:`Container`. This may be used for various sorts of hit-testing.&#39;&#39;&#39;</span>
+		<span class="n">xcell</span><span class="o">=</span><span class="bp">None</span>
+		<span class="n">ycell</span><span class="o">=</span><span class="bp">None</span>
+		<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">cols</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">cell</span><span class="o">.</span><span class="n">offset</span> <span class="ow">and</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="o">&lt;</span><span class="n">cell</span><span class="o">.</span><span class="n">offset</span><span class="o">+</span><span class="n">cell</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+				<span class="n">xcell</span><span class="o">=</span><span class="n">cell</span>
+		<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="o">&gt;=</span><span class="n">cell</span><span class="o">.</span><span class="n">offset</span> <span class="ow">and</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="o">&lt;</span><span class="n">cell</span><span class="o">.</span><span class="n">offset</span><span class="o">+</span><span class="n">cell</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+				<span class="n">ycell</span><span class="o">=</span><span class="n">cell</span>
+		<span class="k">return</span> <span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span></div>
+<div class="viewcode-block" id="Container.ChildAt"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container.ChildAt">[docs]</a>	<span class="k">def</span> <span class="nf">ChildAt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Returns a :class:`Widget` at the position specified, if one exists</span>
+<span class="sd">there; otherwise, returns ``None``.&#39;&#39;&#39;</span>
+		<span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">CellAt</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">xc</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">yc</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">None</span>
+		<span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">xcell</span> <span class="ow">is</span> <span class="n">xc</span> <span class="ow">and</span> <span class="n">child</span><span class="o">.</span><span class="n">ycell</span> <span class="ow">is</span> <span class="n">yc</span><span class="p">:</span>
+				<span class="k">return</span> <span class="n">child</span>
+		<span class="k">return</span> <span class="bp">None</span> <span class="c">#Explicit is better than implicit.</span></div>
+<div class="viewcode-block" id="Container.TriggerChildren"><a class="viewcode-back" href="../doc/src/layout.html#layout.Container.TriggerChildren">[docs]</a>	<span class="k">def</span> <span class="nf">TriggerChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Overrides the default propagation behavior by ensuring that</span>
+<span class="sd">:class:`Event` objects with a ``pos`` attribute are dispatched only to</span>
+<span class="sd">:class:`Widget` objects in that position.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	This special naming convention is all-inclusive; *any* :class:`Event` with</span>
+<span class="sd">	a ``pos`` attribute will be propagated thusly, and any without a ``pos``</span>
+<span class="sd">	attribute will simply propagate to all children, as usual. This means you</span>
+<span class="sd">	can use the same behavior in your position-sensitive events, as well.&#39;&#39;&#39;</span>
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="s">&#39;pos&#39;</span><span class="p">):</span>
+			<span class="n">child</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ChildAt</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+				<span class="n">child</span><span class="o">.</span><span class="n">Trigger</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="nb">super</span><span class="p">(</span><span class="n">Container</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">TriggerChildren</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="ALIGN"><a class="viewcode-back" href="../doc/src/layout.html#layout.ALIGN">[docs]</a><span class="k">class</span> <span class="nc">ALIGN</span><span class="p">:</span>
+	<span class="sd">&#39;&#39;&#39;An enumeration class of legal values for :attr:`Label.align` and similar</span>
+<span class="sd">attributes in derived classes.&#39;&#39;&#39;</span>
+	<span class="c">#: Align the left edge with the left edge of the cell.</span>
+	<span class="n">LEFT</span><span class="o">=</span><span class="mh">0x01</span>
+	<span class="c">#: Center the object in the cell horizontally.</span>
+	<span class="c">#:</span>
+	<span class="c">#: .. note::</span>
+	<span class="c">#:</span>
+	<span class="c">#:    This is the default, so its value is 0, and it is not effective with the other attributes.</span>
+	<span class="n">CENTER</span><span class="o">=</span><span class="mh">0x00</span>
+	<span class="c">#: Align the right edge with the right edge of the cell.</span>
+	<span class="n">RIGHT</span><span class="o">=</span><span class="mh">0x02</span>
+	<span class="c">#: Align the top edge with the top edge of the cell.</span>
+	<span class="n">TOP</span><span class="o">=</span><span class="mh">0x04</span>
+	<span class="c">#: Center the object in the cell vertically.</span>
+	<span class="c">#:</span>
+	<span class="c">#: .. note::</span>
+	<span class="c">#:</span>
+	<span class="c">#:    This is the default, so its value is 0, and it is not effective with the other attributes.</span>
+	<span class="n">MIDDLE</span><span class="o">=</span><span class="mh">0x00</span>
+	<span class="c">#: Align the bottom edge with the bottom edge of the cell.</span>
+	<span class="n">BOTTOM</span><span class="o">=</span><span class="mh">0x08</span>
+	<span class="c">#: Fill the entire horizontal expanse, stretching the object if necessary. (Equivalent to LEFT|RIGHT.)</span>
+	<span class="n">FILLX</span><span class="o">=</span><span class="n">LEFT</span><span class="o">|</span><span class="n">RIGHT</span>
+	<span class="c">#: Fill the entire vertical expanse, stretching the object if necessary. (Equivalent to TOP|BOTTOM.)</span>
+	<span class="n">FILLY</span><span class="o">=</span><span class="n">TOP</span><span class="o">|</span><span class="n">BOTTOM</span>
+</div>
+<div class="viewcode-block" id="Label"><a class="viewcode-back" href="../doc/src/layout.html#layout.Label">[docs]</a><span class="k">class</span> <span class="nc">Label</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;The :class:`Label` is a :class:`Widget` designed to display text.</span>
+
+<span class="sd">Since this function is useful to some other :class:`Widget`\ s, it&#39;s also the</span>
+<span class="sd">base class for a few.&#39;&#39;&#39;</span>
+	<span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">Label</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="c">#: A string containing the text to display.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">=</span><span class="n">text</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_oldtext</span><span class="o">=</span><span class="bp">None</span>
+		<span class="c">#: The alignment mode (a :class:`ALIGN` bit mask).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">=</span><span class="n">align</span>
+		<span class="c">#: The ``pygame.Font`` object to use for rendering.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="n">pygame</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">SysFont</span><span class="p">(</span><span class="n">pygame</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">get_default_font</span><span class="p">(),</span> <span class="mi">30</span><span class="p">)</span> <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">font</span><span class="p">)</span>
+		<span class="c">#: The :class:`scenegraph.Texture` used to store the font texture.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tex</span><span class="o">=</span><span class="bp">None</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Update</span><span class="p">()</span>
+<div class="viewcode-block" id="Label.Update"><a class="viewcode-back" href="../doc/src/layout.html#layout.Label.Update">[docs]</a>	<span class="k">def</span> <span class="nf">Update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Updates the Label, drawing the new :attr:`text` to the :attr:`tex`</span>
+<span class="sd">:class:`scenegraph.Texture`.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	This is done automatically whenever :attr:`text` is no longer determined to</span>
+<span class="sd">	be the same object as before. Since strings in Python are immutable, this</span>
+<span class="sd">	must be the case if the value is no longer the same as well. However, this</span>
+<span class="sd">	process is *not* performed if the :attr:`Widget.fcol` attribute is changed</span>
+<span class="sd">	(which determines the font color), and so it must be either called manually</span>
+<span class="sd">	from code that does this, or the :attr:`text` attribute must be changed to</span>
+<span class="sd">	a different object. A trivial way of performing the latter is assigning</span>
+<span class="sd">	``label.text=str(label.text)``.</span>
+
+<span class="sd">	This behavior may change in later versions to update when the color is changed</span>
+<span class="sd">	as well.&#39;&#39;&#39;</span>
+		<span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span>
+		<span class="n">fcol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fcol</span>
+		<span class="k">if</span> <span class="n">fcol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">fcol</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+		<span class="n">tsurf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">255</span><span class="o">*</span><span class="n">fcol</span><span class="o">.</span><span class="n">FastTo3</span><span class="p">()))</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tex</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">tex</span><span class="o">=</span><span class="n">Texture</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tex</span><span class="o">.</span><span class="n">surf</span><span class="o">=</span><span class="n">tsurf</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tex</span><span class="o">.</span><span class="n">Reload</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Label.Render"><a class="viewcode-back" href="../doc/src/layout.html#layout.Label.Render">[docs]</a>	<span class="k">def</span> <span class="nf">Render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Renders the label using the current viewport.&#39;&#39;&#39;</span>
+		<span class="n">glPushAttrib</span><span class="p">(</span><span class="n">GL_ENABLE_BIT</span><span class="p">)</span>
+		<span class="n">glDisable</span><span class="p">(</span><span class="n">GL_TEXTURE_2D</span><span class="p">)</span>
+		<span class="n">glDisable</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bcol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">glColor4d</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">bcol</span><span class="o">.</span><span class="n">FastTo4</span><span class="p">())</span>
+			<span class="n">glRectdv</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oldtext</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">Update</span><span class="p">()</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_oldtext</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">RenderText</span><span class="p">()</span>
+		<span class="n">glPopAttrib</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Label.RenderText"><a class="viewcode-back" href="../doc/src/layout.html#layout.Label.RenderText">[docs]</a>	<span class="k">def</span> <span class="nf">RenderText</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Renders the text--a process which is usable by subclasses as needed.</span>
+
+<span class="sd">.. warning::</span>
+
+<span class="sd">	While GL_ENABLE_BIT is pushed before rendering, GL_TEXTURE_2D is still</span>
+<span class="sd">	generally enabled after this process. You&#39;ll want to disable it before</span>
+<span class="sd">	doing your own rendering after calling this, as the 0, 0 texel generally</span>
+<span class="sd">	has an alpha value of 0.</span>
+
+<span class="sd">	This is a known bug and will be fixed.&#39;&#39;&#39;</span>
+		<span class="n">glPushAttrib</span><span class="p">(</span><span class="n">GL_ENABLE_BIT</span><span class="p">)</span>
+		<span class="n">tsz</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tex</span><span class="o">.</span><span class="n">surf</span><span class="o">.</span><span class="n">get_size</span><span class="p">())</span>
+		<span class="n">vsz</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">glGetIntegerv</span><span class="p">(</span><span class="n">GL_VIEWPORT</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]))</span>
+		<span class="n">csz</span><span class="o">=</span><span class="n">tsz</span><span class="o">/</span><span class="n">vsz</span>
+		<span class="n">minima</span><span class="o">=-</span><span class="n">csz</span>
+		<span class="n">maxima</span><span class="o">=</span><span class="n">csz</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">&amp;</span><span class="n">ALIGN</span><span class="o">.</span><span class="n">LEFT</span><span class="p">:</span>
+			<span class="n">minima</span><span class="o">.</span><span class="n">x</span><span class="o">=-</span><span class="mi">1</span>
+			<span class="n">maxima</span><span class="o">.</span><span class="n">x</span><span class="o">-=</span><span class="mi">1</span><span class="o">-</span><span class="n">csz</span><span class="o">.</span><span class="n">x</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">&amp;</span><span class="n">ALIGN</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">:</span>
+			<span class="n">maxima</span><span class="o">.</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">&amp;</span><span class="n">ALIGN</span><span class="o">.</span><span class="n">LEFT</span><span class="p">:</span>
+				<span class="n">minima</span><span class="o">.</span><span class="n">x</span><span class="o">+=</span><span class="mi">1</span><span class="o">-</span><span class="n">csz</span><span class="o">.</span><span class="n">x</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">&amp;</span><span class="n">ALIGN</span><span class="o">.</span><span class="n">BOTTOM</span><span class="p">:</span>
+			<span class="n">minima</span><span class="o">.</span><span class="n">y</span><span class="o">=-</span><span class="mi">1</span>
+			<span class="n">maxima</span><span class="o">.</span><span class="n">y</span><span class="o">-=</span><span class="mi">1</span><span class="o">-</span><span class="n">csz</span><span class="o">.</span><span class="n">y</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">&amp;</span><span class="n">ALIGN</span><span class="o">.</span><span class="n">TOP</span><span class="p">:</span>
+			<span class="n">maxima</span><span class="o">.</span><span class="n">y</span><span class="o">=</span><span class="mi">1</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">align</span><span class="o">&amp;</span><span class="n">ALIGN</span><span class="o">.</span><span class="n">BOTTOM</span><span class="p">:</span>
+				<span class="n">minima</span><span class="o">.</span><span class="n">y</span><span class="o">+=</span><span class="mi">1</span><span class="o">-</span><span class="n">csz</span><span class="o">.</span><span class="n">y</span>
+		<span class="n">glEnable</span><span class="p">(</span><span class="n">GL_TEXTURE_2D</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tex</span><span class="o">.</span><span class="n">Apply</span><span class="p">()</span>
+<span class="c">##			print &#39;Label&#39;, self.text, &#39;has TID&#39;, self.tex.id, &#39;and surf&#39;, self.tex.surf</span>
+		<span class="n">glColor4d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+		<span class="n">glBegin</span><span class="p">(</span><span class="n">GL_QUADS</span><span class="p">)</span>
+		<span class="n">glTexCoord2d</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+		<span class="n">glVertex2d</span><span class="p">(</span><span class="n">minima</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">minima</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+		<span class="n">glTexCoord2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+		<span class="n">glVertex2d</span><span class="p">(</span><span class="n">maxima</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">minima</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+		<span class="n">glTexCoord2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+		<span class="n">glVertex2d</span><span class="p">(</span><span class="n">maxima</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">maxima</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+		<span class="n">glTexCoord2d</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+		<span class="n">glVertex2d</span><span class="p">(</span><span class="n">minima</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">maxima</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+		<span class="n">glEnd</span><span class="p">()</span>
+		<span class="n">glPopAttrib</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="ORIENT"><a class="viewcode-back" href="../doc/src/layout.html#layout.ORIENT">[docs]</a><span class="k">class</span> <span class="nc">ORIENT</span><span class="p">:</span>
+	<span class="sd">&#39;&#39;&#39;An enumeration of legal values for the :attr:`Slider.orient` attribute.&#39;&#39;&#39;</span>
+	<span class="c">#: Orient horizontally, along the X axis.</span>
+	<span class="n">HORIZONTAL</span><span class="o">=</span><span class="mi">0</span>
+	<span class="c">#: Orient vertically, along the Y axis.</span>
+	<span class="n">VERTICAL</span><span class="o">=</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Slider"><a class="viewcode-back" href="../doc/src/layout.html#layout.Slider">[docs]</a><span class="k">class</span> <span class="nc">Slider</span><span class="p">(</span><span class="n">Label</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mapfunc</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">showval</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="n">ORIENT</span><span class="o">.</span><span class="n">HORIZONTAL</span><span class="p">,</span> <span class="n">hwidth</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hcol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">(</span><span class="n">Slider</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">xcell</span><span class="p">,</span> <span class="n">ycell</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="c">#: The actual value of this :class:`Slider`, as modified by the user (and possibly mapped by :attr:`mapfunc`).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">=</span><span class="n">value</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_oldvalue</span><span class="o">=</span><span class="bp">None</span>
+		<span class="c">#: The smallest value this should contain.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="o">=</span><span class="nb">min</span>
+		<span class="c">#: The largest value this should contain.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="o">=</span><span class="nb">max</span>
+		<span class="c">#: A function called with the raw, floating-point value from the user input, whose return is mapped to :attr:`value`.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mapfunc</span><span class="o">=</span><span class="n">mapfunc</span>
+		<span class="c">#: True to display the value as a text object (which obeys :class:`Label` attributes like :attr:`Label.align`).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">showval</span><span class="o">=</span><span class="n">showval</span>
+		<span class="c">#: The orientation (a :class:`ORIENT` constant).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="o">=</span><span class="n">orient</span>
+		<span class="c">#: The floating-point width of the slide handle in normalized device coordinates (where 1 would be half the viewport).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">hwidth</span><span class="o">=</span><span class="n">hwidth</span>
+		<span class="c">#: A 4D :class:`vmath.Vector` color of the slide handle (or ``None`` for the default transparent gray).</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">hcol</span><span class="o">=</span><span class="n">hcol</span>
+	<span class="nd">@property</span>
+<div class="viewcode-block" id="Slider.range"><a class="viewcode-back" href="../doc/src/layout.html#layout.Slider.range">[docs]</a>	<span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;The computed difference between :attr:`max` and :attr:`min`.&#39;&#39;&#39;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span></div>
+	<span class="nd">@property</span>
+<div class="viewcode-block" id="Slider.ratio"><a class="viewcode-back" href="../doc/src/layout.html#layout.Slider.ratio">[docs]</a>	<span class="k">def</span> <span class="nf">ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;The position of :attr:`value` normalized such that the minimal point</span>
+<span class="sd">is 0 and the maximal point is 1.&#39;&#39;&#39;</span>
+		<span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span></div>
+	<span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Slider.Step"><a class="viewcode-back" href="../doc/src/layout.html#layout.Slider.Step">[docs]</a>	<span class="k">def</span> <span class="nf">Step</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Produces a lambda function that may be used as a value for :attr:`mapfunc`.</span>
+<span class="sd">The return function will produce values ``x`` such that ``x*n`` is an integer</span>
+<span class="sd">(barring round-off error), or, alternatively, will clamp values to ``1/n`` increments.</span>
+
+<span class="sd">Calling this with ``n==1`` will result in an analogue to the ``int`` function, which</span>
+<span class="sd">should probably be used instead.&#39;&#39;&#39;</span>
+		<span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Slider.Render"><a class="viewcode-back" href="../doc/src/layout.html#layout.Slider.Render">[docs]</a>	<span class="k">def</span> <span class="nf">Render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Renders the slider.&#39;&#39;&#39;</span>
+		<span class="n">glPushAttrib</span><span class="p">(</span><span class="n">GL_ENABLE_BIT</span><span class="p">)</span>
+		<span class="n">glDisable</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>
+		<span class="n">glDisable</span><span class="p">(</span><span class="n">GL_TEXTURE_2D</span><span class="p">)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bcol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">glColor4d</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">bcol</span><span class="o">.</span><span class="n">FastTo4</span><span class="p">())</span>
+			<span class="n">glRectdv</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">showval</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">!=</span><span class="bp">self</span><span class="o">.</span><span class="n">_oldvalue</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">Update</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">RenderText</span><span class="p">()</span>
+		<span class="n">hcol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hcol</span>
+		<span class="k">if</span> <span class="n">hcol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">hcol</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+		<span class="n">glColor4d</span><span class="p">(</span><span class="o">*</span><span class="n">hcol</span><span class="o">.</span><span class="n">FastTo4</span><span class="p">())</span>
+		<span class="n">glDisable</span><span class="p">(</span><span class="n">GL_TEXTURE_2D</span><span class="p">)</span> <span class="c">#XXX From .RenderText; might need to do more than just push GL_ENABLE_BIT</span>
+		<span class="n">pos</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ratio</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="o">==</span><span class="n">ORIENT</span><span class="o">.</span><span class="n">HORIZONTAL</span><span class="p">:</span>
+			<span class="n">glRectdv</span><span class="p">((</span><span class="n">pos</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">hwidth</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">pos</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">hwidth</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">glRectdv</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">hwidth</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">hwidth</span><span class="p">))</span>
+		<span class="n">glPopAttrib</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Grissess, PaulTagg, Niles, et. al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

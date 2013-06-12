@@ -7,5 +7,6 @@ This document tree contains all of the documentation extracted from the source c
    :maxdepth: 2
 
    vmath
+   scenegraph
 
 

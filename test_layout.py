@@ -57,12 +57,14 @@ lines.children.append(spr)
 con=Container(Grid(3, 2))
 lbl=Label(*con.grid.CellPair(0, 0), text='Hello world!', fcol=Vector(1, 0, 0, 1), bcol=Vector(0.5, 0.5, 0, 0.5))
 con.children.append(lbl)
-lbl=Label(*con.grid.CellPair(1, 0), text='I\'m fine today', align=TALIGN.LEFT|TALIGN.TOP, fcol=Vector(1, 0, 0, 1), bcol=Vector(0.5, 0, 0, 0.5))
+lbl=Label(*con.grid.CellPair(1, 0), text='I\'m fine today', align=ALIGN.LEFT|ALIGN.TOP, fcol=Vector(1, 0, 0, 1), bcol=Vector(0.5, 0, 0, 0.5))
 con.children.append(lbl)
-lbl=Label(*con.grid.CellPair(1, 2), text='I\'m great thanks!', align=TALIGN.FILLY, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0.5, 0, 0.5))
+lbl=Label(*con.grid.CellPair(1, 2), text='I\'m great thanks!', align=ALIGN.FILLY, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0.5, 0, 0.5))
 con.children.append(lbl)
-lbl=Label(*con.grid.CellPair(1, 1), text='How are you?', align=TALIGN.FILLX, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0, 0.5, 0.5))
+lbl=Label(*con.grid.CellPair(1, 1), text='How are you?', align=ALIGN.FILLX, fcol=Vector(1, 0, 0, 1), bcol=Vector(0, 0, 0.5, 0.5))
 con.children.append(lbl)
+sld=Slider(*con.grid.CellPair(0, 1), bcol=Vector(0, 0.5, 0.5, 0.5))
+con.children.append(sld)
 sc.children.append(con)
 
 ##print 'Viewport: ', glGetIntegerv(GL_VIEWPORT)
@@ -78,6 +80,9 @@ while True:
 	mesh.transform.rot[0]+=1
 	if mesh.transform.rot[0]>=360:
 		mesh.transform.rot[0]-=360
+	sld.value+=0.02
+	if sld.value>1:
+		sld.value=0
 	with sc:
 		sc.Render()
 	pygame.display.flip()
