@@ -16,6 +16,8 @@ from OpenGL.GL import *
 from vmath import Vector
 from scenegraph import Renderable, Texture
 from event import EVENT, KBD, MOUSE
+from log import main, DV1, DV2, DV3, obCode
+logger=main.getChild('layout')
 
 class LayoutCell(object):
 	'''A :class:`LayoutCell` represents a single cell in a layout facility. In

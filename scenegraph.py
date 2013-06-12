@@ -43,6 +43,8 @@ from OpenGL.GLU import *
 
 from vmath import Vector, Matrix
 from event import EventHandler
+from log import main, DV1, DV2, DV3, obCode
+logger=main.getChild('sg')
 
 class Modification(object):
 	'''The :class:`Modification` is a generic class that applies some state
@@ -64,6 +66,10 @@ actually the parent of quite a few other classes, :class:`Texture` and
 
 	This must be defined by a subclass.'''
 		raise NotImplementedError('Modification object must define .Revert()')
+	def __enter__(self):
+		self.Apply()
+	def __exit__(self, *exc_info):
+		self.Revert()
 
 class Transform(Modification):
 	'''The :class:`Transform` class is actually nothing more than an ABC that
@@ -251,7 +257,7 @@ texture parameters.
 	(and their drivers) tend to prioritize speed of access over speed of uploading
 	(for obvious reasons), so this will likely not be an efficient way to animate
 	textures, and should only be done as necessary.'''
-		self.Apply()
+		glBindTexture(GL_TEXTURE_2D, self.id)
 		self.filter.Apply()
 		self.wrap.Apply()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.surf.get_width(),
@@ -260,6 +266,7 @@ texture parameters.
 		glFlush()
 	def Apply(self):
 		'''Bind the texture such that it is available for the next rendering operation.'''
+		glEnable(GL_TEXTURE_2D)
 		glBindTexture(GL_TEXTURE_2D, self.id)
 	def Revert(self):
 		'''Does nothing.
@@ -270,7 +277,7 @@ texture parameters.
 	disable GL_TEXTURE_2D. This is easiest done by having it so that
 	GL_TEXTURE_2D is enabled only so long as that geometry is rendering--by
 	putting it in the :attr:`Renderable.enable` set.'''
-		pass #XXX Should we actually rebind the old texture? What if there isn't one?
+		glDisable(GL_TEXTURE_2D) #XXX Should we actually rebind the old texture? What if there isn't one?
 
 class Renderable(EventHandler):
 	'''The :class:`Renderable` class implements anything and everything that

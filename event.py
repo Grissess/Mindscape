@@ -11,6 +11,8 @@ import pygame
 from pygame.locals import *
 
 from vmath import Vector
+from log import main, DV1, DV2, DV3, obCode
+logger=main.getChild('event')
 
 class EVENT:
 	'''An enumeration containing valid values for :attr:`Event.type`.'''

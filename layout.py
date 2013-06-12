@@ -16,6 +16,8 @@ from OpenGL.GL import *
 from vmath import Vector
 from scenegraph import Renderable, Texture
 from event import EVENT, KBD, MOUSE
+from log import main, DV1, DV2, DV3, obCode
+logger=main.getChild('layout')
 
 class LayoutCell(object):
 	'''A :class:`LayoutCell` represents a single cell in a layout facility. In
@@ -377,20 +379,18 @@ base class for a few.'''
 			maxima.y=1
 			if not self.align&ALIGN.BOTTOM:
 				minima.y+=1-csz.y
-		glEnable(GL_TEXTURE_2D)
-		self.tex.Apply()
-##			print 'Label', self.text, 'has TID', self.tex.id, 'and surf', self.tex.surf
-		glColor4d(1, 1, 1, 1)
-		glBegin(GL_QUADS)
-		glTexCoord2d(0, 0)
-		glVertex2d(minima.x, minima.y)
-		glTexCoord2d(1, 0)
-		glVertex2d(maxima.x, minima.y)
-		glTexCoord2d(1, 1)
-		glVertex2d(maxima.x, maxima.y)
-		glTexCoord2d(0, 1)
-		glVertex2d(minima.x, maxima.y)
-		glEnd()
+		with self.tex:
+			glColor4d(1, 1, 1, 1)
+			glBegin(GL_QUADS)
+			glTexCoord2d(0, 0)
+			glVertex2d(minima.x, minima.y)
+			glTexCoord2d(1, 0)
+			glVertex2d(maxima.x, minima.y)
+			glTexCoord2d(1, 1)
+			glVertex2d(maxima.x, maxima.y)
+			glTexCoord2d(0, 1)
+			glVertex2d(minima.x, maxima.y)
+			glEnd()
 		glPopAttrib()
 
 class ORIENT:

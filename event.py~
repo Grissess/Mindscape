@@ -44,8 +44,8 @@ class MOUSE:
 	#:
 	#: .. note::
 	#:
-	#:    Some genius at SDL/pygame decided to make the .buttons sequence for
-	#:    the :attr:`MOVE` event zero-based, but to have all the .button ints
+	#:    Some genius at SDL/pygame decided to make the ``buttons`` sequence for
+	#:    the :attr:`MOVE` event zero-based, but to have all the ``button`` ints
 	#:    in the down/up events one-based. Mindscape fixes that for you; all
 	#:    buttons are zero-based.
 	BUTTONDOWN=1
@@ -71,6 +71,12 @@ class MOUSE:
 	#:    coaxed into lying about it.
 	WHEEL=3
 	#: The cursor was moved.
+	#:
+	#: .. note::
+	#:
+	#:    While technically true of all mouse events, the ``pos`` attribute is
+	#:    cast to be a :class:`vmath.Vector`, not a tuple, as is the ``rel``
+	#:    attribute.
 	MOVE=4
 
 class Event(object):
