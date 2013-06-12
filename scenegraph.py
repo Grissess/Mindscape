@@ -42,6 +42,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from vmath import Vector, Matrix
+from event import EventHandler
 
 class Modification(object):
 	'''The :class:`Modification` is a generic class that applies some state
@@ -272,7 +273,7 @@ texture parameters.
 	putting it in the :attr:`Renderable.enable` set.'''
 		pass #XXX Should we actually rebind the old texture? What if there isn't one?
 
-class Renderable(object):
+class Renderable(EventHandler):
 	'''The :class:`Renderable` class implements anything and everything that
 can actually be drawn to the screen. Importantly, it is responsible for
 implementing the shared functionality between all such objects, such as their
@@ -366,6 +367,14 @@ This is intended to be called from within a defined :func:`Render` method.
 		for child in self.children:
 			with child:
 				child.Render()
+	def TriggerChildren(self, ev):
+		'''Propagate an :class:`Event` to child :class:`Renderable`\ s.
+
+.. note::
+
+	See :func:`event.EventHandler.Trigger`.'''
+		for child in self.children:
+			child.Trigger(ev)
 
 class Camera(Renderable):
 	'''This class is the base class to two more specific cameras, but it also

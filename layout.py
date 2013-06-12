@@ -90,26 +90,6 @@ given.'''
 specified by the ``x`` and ``y`` parameters.'''
 		return self.cols[x], self.rows[y]
 
-class EVENT:
-	'''An enumeration containing valid values for :attr:`Event.type`.'''
-	#: An event relating to the keyboard (key down, key up, character, ...)
-	KBD=1
-	#: An event relating to the mouse (button press, release, mouse move, ...)
-	MOUSE=2
-
-class Event(object):
-	'''An :class:`Event` contains all of the information needed to pass an
-event to a system which uses events.
-
-Events may be given arbitrary attributes from the keyword arguments passed to
-the constructor. A later ``type=...`` in the keyword arguments will override
-the specified event type given as a positional parameter, if one is provided.'''
-	def __init__(self, type, **kwargs):
-		#: The event type (one of the :class:`EVENT` values). Other attributes depend on the event.
-		self.type=type
-		for k, v in kwargs.iteritems():
-			setattr(self, k , v)
-
 class Widget(Renderable):
 	'''A :class:`Widget` is a special type of :class:`scenegraph.Renderable`
 that expects to be in an environment where:
@@ -160,33 +140,6 @@ layout axes.'''
 	def PopState(self):
 		'''Reset the state (basically, pop the viewport).'''
 		glPopAttrib()
-	def Trigger(self, ev):
-		'''Trigger an :class:`Event`.
-
-.. note::
-
-	Triggering an :class:`Event` is not the same as handling an event; triggering
-	will inevitably cause handling by this :class:`Widget`, and may cause handling
-	by children (based on the propagation policy--how the :class:`Widget` defines
-	:func:`TriggerChildren`. Handling the :class:`Event` is done by :func:`Handle`,
-	which actually causes the :class:`Widget` to process the event.'''
-		self.Handle(ev)
-		self.TriggerChildren(ev)
-	def Handle(self, ev):
-		'''Hanle an :class:`Event`. By default, this does nothing.
-
-.. note::
-
-	See :func:`Trigger`.'''
-		pass
-	def TriggerChildren(self, ev):
-		'''Propagate an :class:`Event` to child :class:`Widget`\ s.
-
-.. note::
-
-	See :func:`Trigger`.'''
-		for child in self.children:
-			child.Trigger(ev)
 
 class Container(Widget):
 	'''A :class:`Container` is a :class:`Widget` that contains other :class:`Widget`\ s.

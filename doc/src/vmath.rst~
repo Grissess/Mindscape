@@ -1,7 +1,2 @@
-vmath -- Vector Math
-====================
-
-This module defines convenience classes used for mathematical manipulations (particularly vectors and matrices).
-
 .. automodule:: vmath
    :members:

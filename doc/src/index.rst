@@ -9,5 +9,6 @@ This document tree contains all of the documentation extracted from the source c
    vmath
    scenegraph
    layout
+   event
 
 

@@ -64,7 +64,8 @@ in numpy for speed.</p>
 <dl class="class">
 <dt id="vmath.Vector">
 <em class="property">class </em><tt class="descclassname">vmath.</tt><tt class="descname">Vector</tt><a class="reference internal" href="../../_modules/vmath.html#Vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vmath.Vector" title="Permalink to this definition">¶</a></dt>
-<dd><p>A vector is an array of double-precision floating points of arbitrary
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></p>
+<p>A vector is an array of double-precision floating points of arbitrary
 size (though usually between two and four members). The <a class="reference internal" href="#vmath.Vector" title="vmath.Vector"><tt class="xref py py-class docutils literal"><span class="pre">Vector</span></tt></a> class is
 actually the <tt class="docutils literal"><span class="pre">numpy.ndarray</span></tt> class, with a few special members, a fixed type,
 and a special constructor (you may pass elements as arbitrary positional
@@ -187,7 +188,8 @@ accepts, e.g., tuples or lists (of the specified size).</p>
 <dl class="class">
 <dt id="vmath.Matrix">
 <em class="property">class </em><tt class="descclassname">vmath.</tt><tt class="descname">Matrix</tt><a class="reference internal" href="../../_modules/vmath.html#Matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vmath.Matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>A matrix is a two-dimensional collection of double-precision floating
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">numpy.matrixlib.defmatrix.matrix</span></tt></p>
+<p>A matrix is a two-dimensional collection of double-precision floating
 point numbers wherein each dimension has the same cardinality (technically,
 that means all of the matrices hereby defined are <em>square</em> matrices; for all
 other cases, you&#8217;ll want to use a <tt class="docutils literal"><span class="pre">numpy.ndarray</span></tt> of two dimensions instead.)

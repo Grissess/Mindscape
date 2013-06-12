@@ -242,3 +242,4 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 autodoc_member_order='bysource'
+autodoc_default_flags=['members', 'show-inheritance']

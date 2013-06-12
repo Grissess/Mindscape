@@ -1,0 +1,173 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>event &mdash; Mindscape 0.0-prealpha documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0-prealpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Mindscape 0.0-prealpha documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for event</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">.. mindscape -- Mindscape Engine</span>
+<span class="sd">event -- Events</span>
+
+<span class="sd">This module defines events that may be used anywhere that an event-driven</span>
+<span class="sd">system is required.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="EVENT"><a class="viewcode-back" href="../doc/src/event.html#event.EVENT">[docs]</a><span class="k">class</span> <span class="nc">EVENT</span><span class="p">:</span>
+	<span class="sd">&#39;&#39;&#39;An enumeration containing valid values for :attr:`Event.type`.&#39;&#39;&#39;</span>
+	<span class="c">#: An event relating to the keyboard (key down, key up, character, ...)</span>
+	<span class="n">KBD</span><span class="o">=</span><span class="mi">1</span>
+	<span class="c">#: An event relating to the mouse (button press, release, mouse move, ...)</span>
+	<span class="n">MOUSE</span><span class="o">=</span><span class="mi">2</span>
+</div>
+<div class="viewcode-block" id="KBD"><a class="viewcode-back" href="../doc/src/event.html#event.KBD">[docs]</a><span class="k">class</span> <span class="nc">KBD</span><span class="p">:</span>
+	<span class="sd">&#39;&#39;&#39;An enumeration containing event subtypes for the :attr:`EVENT.KBD` event.&#39;&#39;&#39;</span>
+	<span class="c">#: A key was pressed.</span>
+	<span class="n">KEYDOWN</span><span class="o">=</span><span class="mi">1</span>
+	<span class="c">#: A key was released.</span>
+	<span class="n">KEYUP</span><span class="o">=</span><span class="mi">2</span>
+	<span class="c">#: A printable character was generated</span>
+	<span class="c">#:</span>
+	<span class="c">#: .. note::</span>
+	<span class="c">#:</span>
+	<span class="c">#:    Printable character generation may occur multiple times between a</span>
+	<span class="c">#:    key press and key release (such as when the key is held for long</span>
+	<span class="c">#:    enough to start auto-repeating), or not at all (such as if the key</span>
+	<span class="c">#:    is a non-printable, like a modifier key or an F-key). In general, if</span>
+	<span class="c">#:    you&#39;re interested in what the user is typing, hook :attr:`CHAR`;</span>
+	<span class="c">#;    otherwise, if you&#39;re interested in the state of the keyboard, hook</span>
+	<span class="c">#:    :attr:`KEYDOWN` and :attr:`KEYUP`.</span>
+	<span class="n">CHAR</span><span class="o">=</span><span class="mi">3</span>
+</div>
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../doc/src/event.html#event.Event">[docs]</a><span class="k">class</span> <span class="nc">Event</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;An :class:`Event` contains all of the information needed to pass an</span>
+<span class="sd">event to a system which uses events.</span>
+
+<span class="sd">Events may be given arbitrary attributes from the keyword arguments passed to</span>
+<span class="sd">the constructor. A later ``type=...`` in the keyword arguments will override</span>
+<span class="sd">the specified event type given as a positional parameter, if one is provided.&#39;&#39;&#39;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="c">#: The event type (one of the :class:`EVENT` values). Other attributes depend on the event.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">=</span><span class="nb">type</span>
+		<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+			<span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span> <span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</div>
+<span class="k">class</span> <span class="nc">EventHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">Trigger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Trigger an :class:`Event`.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	Triggering an :class:`Event` is not the same as handling an event; triggering</span>
+<span class="sd">	will inevitably cause handling by this object, and may cause handling</span>
+<span class="sd">	by children (based on the propagation policy--how the subclass defines</span>
+<span class="sd">	:func:`TriggerChildren`. Handling the :class:`Event` is done by :func:`Handle`,</span>
+<span class="sd">	which actually causes the :class:`EventHandler` to process the event.&#39;&#39;&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">Handle</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">TriggerChildren</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">Handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Handle an :class:`Event`. By default, this does nothing.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	See :func:`Trigger`.&#39;&#39;&#39;</span>
+		<span class="k">pass</span>
+	<span class="k">def</span> <span class="nf">TriggerChildren</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;Propagate the event. Subclasses are expected to implement this if</span>
+<span class="sd">they have some kind of propagation policy; otherwise, it may be left derived</span>
+<span class="sd">(and thereby nonfunctional).</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">	Since :class:`scenegraph.Renderable` is a direct subclass of this, and has</span>
+<span class="sd">	children, it&#39;s a fair expectation that it has implemented the propagation</span>
+<span class="sd">	policy.&#39;&#39;&#39;</span>
+		<span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Mindscape 0.0-prealpha documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Grissess, PaulTagg, Niles, et. al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -62,7 +62,8 @@ which means that it deals with <a class="reference internal" href="#layout.Grid"
 <dl class="class">
 <dt id="layout.LayoutCell">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">LayoutCell</tt><big>(</big><em>weight=1.0</em>, <em>fixed=0</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#LayoutCell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.LayoutCell" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a> represents a single cell in a layout facility. In
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A <a class="reference internal" href="#layout.LayoutCell" title="layout.LayoutCell"><tt class="xref py py-class docutils literal"><span class="pre">LayoutCell</span></tt></a> represents a single cell in a layout facility. In
 particular, once computations have been undergone by the manager holding (a set)
 of these cells, the <a class="reference internal" href="#layout.LayoutCell.offset" title="layout.LayoutCell.offset"><tt class="xref py py-attr docutils literal"><span class="pre">offset</span></tt></a> and <a class="reference internal" href="#layout.LayoutCell.size" title="layout.LayoutCell.size"><tt class="xref py py-attr docutils literal"><span class="pre">size</span></tt></a> attributes should represent
 the (window coordinate) space that this cell takes up, on one dimension. (Two
@@ -96,7 +97,8 @@ cells are needed for two dimensions.)</p>
 <dl class="class">
 <dt id="layout.LayoutVector">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">LayoutVector</tt><big>(</big><em>*cells</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#LayoutVector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.LayoutVector" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a> contains a vector (well, a list) of cells arranged
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a> contains a vector (well, a list) of cells arranged
 along one dimension. The layout may be computed against a dimensional measure
 (in any coordinate system, though typically the window coordinate system is used
 for compatibility with the rest of this module), and the <a class="reference internal" href="#layout.LayoutCell.offset" title="layout.LayoutCell.offset"><tt class="xref py py-attr docutils literal"><span class="pre">LayoutCell.offset</span></tt></a>
@@ -119,7 +121,8 @@ along this dimensions of the argument given.</p>
 <dl class="class">
 <dt id="layout.Grid">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Grid</tt><big>(</big><em>rows</em>, <em>cols</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#layout.Grid" title="layout.Grid"><tt class="xref py py-class docutils literal"><span class="pre">Grid</span></tt></a> is basically just two <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a>s on
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A <a class="reference internal" href="#layout.Grid" title="layout.Grid"><tt class="xref py py-class docutils literal"><span class="pre">Grid</span></tt></a> is basically just two <a class="reference internal" href="#layout.LayoutVector" title="layout.LayoutVector"><tt class="xref py py-class docutils literal"><span class="pre">LayoutVector</span></tt></a>s on
 perpendicular axes, with a convenience function (<a class="reference internal" href="#layout.Grid.CellPair" title="layout.Grid.CellPair"><tt class="xref py py-func docutils literal"><span class="pre">CellPair()</span></tt></a>) to return
 the two cells (as a tuple) at the specified indices.</p>
 <p>The constructor expects two parameters, which may either be integers (specifying
@@ -154,43 +157,10 @@ specified by the <tt class="docutils literal"><span class="pre">x</span></tt> an
 </dd></dl>
 
 <dl class="class">
-<dt id="layout.EVENT">
-<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">EVENT</tt><a class="reference internal" href="../../_modules/layout.html#EVENT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.EVENT" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration containing valid values for <a class="reference internal" href="#layout.Event.type" title="layout.Event.type"><tt class="xref py py-attr docutils literal"><span class="pre">Event.type</span></tt></a>.</p>
-<dl class="attribute">
-<dt id="layout.EVENT.KBD">
-<tt class="descname">KBD</tt><em class="property"> = 1</em><a class="headerlink" href="#layout.EVENT.KBD" title="Permalink to this definition">¶</a></dt>
-<dd><p>An event relating to the keyboard (key down, key up, character, ...)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="layout.EVENT.MOUSE">
-<tt class="descname">MOUSE</tt><em class="property"> = 2</em><a class="headerlink" href="#layout.EVENT.MOUSE" title="Permalink to this definition">¶</a></dt>
-<dd><p>An event relating to the mouse (button press, release, mouse move, ...)</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="layout.Event">
-<em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Event</tt><big>(</big><em>type</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Event" title="Permalink to this definition">¶</a></dt>
-<dd><p>An <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> contains all of the information needed to pass an
-event to a system which uses events.</p>
-<p>Events may be given arbitrary attributes from the keyword arguments passed to
-the constructor. A later <tt class="docutils literal"><span class="pre">type=...</span></tt> in the keyword arguments will override
-the specified event type given as a positional parameter, if one is provided.</p>
-<dl class="attribute">
-<dt id="layout.Event.type">
-<tt class="descname">type</tt><em class="property"> = None</em><a class="headerlink" href="#layout.Event.type" title="Permalink to this definition">¶</a></dt>
-<dd><p>The event type (one of the <a class="reference internal" href="#layout.EVENT" title="layout.EVENT"><tt class="xref py py-class docutils literal"><span class="pre">EVENT</span></tt></a> values). Other attributes depend on the event.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="layout.Widget">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Widget</tt><big>(</big><em>xcell</em>, <em>ycell</em>, <em>fcol=None</em>, <em>bcol=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> is a special type of <a class="reference internal" href="scenegraph.html#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Renderable</span></tt></a>
+<dd><p>Bases: <a class="reference internal" href="scenegraph.html#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Renderable</span></tt></a></p>
+<p>A <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> is a special type of <a class="reference internal" href="scenegraph.html#scenegraph.Renderable" title="scenegraph.Renderable"><tt class="xref py py-class docutils literal"><span class="pre">scenegraph.Renderable</span></tt></a>
 that expects to be in an environment where:</p>
 <ul class="simple">
 <li>The projection and modelview matrices are identity, giving a precise mapping
@@ -261,46 +231,13 @@ and so on.</p>
 <dd><p>Reset the state (basically, pop the viewport).</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="layout.Widget.Trigger">
-<tt class="descname">Trigger</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.Trigger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.Trigger" title="Permalink to this definition">¶</a></dt>
-<dd><p>Trigger an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Triggering an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> is not the same as handling an event; triggering
-will inevitably cause handling by this <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>, and may cause handling
-by children (based on the propagation policy&#8211;how the <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> defines
-<a class="reference internal" href="#layout.Widget.TriggerChildren" title="layout.Widget.TriggerChildren"><tt class="xref py py-func docutils literal"><span class="pre">TriggerChildren()</span></tt></a>. Handling the <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> is done by <a class="reference internal" href="#layout.Widget.Handle" title="layout.Widget.Handle"><tt class="xref py py-func docutils literal"><span class="pre">Handle()</span></tt></a>,
-which actually causes the <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> to process the event.</p>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="layout.Widget.Handle">
-<tt class="descname">Handle</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.Handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.Handle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hanle an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a>. By default, this does nothing.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">See <a class="reference internal" href="#layout.Widget.Trigger" title="layout.Widget.Trigger"><tt class="xref py py-func docutils literal"><span class="pre">Trigger()</span></tt></a>.</p>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="layout.Widget.TriggerChildren">
-<tt class="descname">TriggerChildren</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Widget.TriggerChildren"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Widget.TriggerChildren" title="Permalink to this definition">¶</a></dt>
-<dd><p>Propagate an <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> to child <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">See <a class="reference internal" href="#layout.Widget.Trigger" title="layout.Widget.Trigger"><tt class="xref py py-func docutils literal"><span class="pre">Trigger()</span></tt></a>.</p>
-</div>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
 <dt id="layout.Container">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Container</tt><big>(</big><em>grid</em>, <em>xcell=None</em>, <em>ycell=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a> is a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> that contains other <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s.
+<dd><p>Bases: <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">layout.Widget</span></tt></a></p>
+<p>A <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a> is a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> that contains other <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s.
 In particular, a <a class="reference internal" href="#layout.Container" title="layout.Container"><tt class="xref py py-class docutils literal"><span class="pre">Container</span></tt></a> is special in that it can accept an
 <a class="reference internal" href="#layout.Widget.xcell" title="layout.Widget.xcell"><tt class="xref py py-attr docutils literal"><span class="pre">Widget.xcell</span></tt></a> and <a class="reference internal" href="#layout.Widget.ycell" title="layout.Widget.ycell"><tt class="xref py py-attr docutils literal"><span class="pre">Widget.ycell</span></tt></a> value of <tt class="docutils literal"><span class="pre">None</span></tt>, implying that
 this container is the <em>top-level container</em>, which causes it to do useful duties
@@ -350,11 +287,11 @@ there; otherwise, returns <tt class="docutils literal"><span class="pre">None</s
 <dt id="layout.Container.TriggerChildren">
 <tt class="descname">TriggerChildren</tt><big>(</big><em>ev</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Container.TriggerChildren"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Container.TriggerChildren" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overrides the default propagation behavior by ensuring that
-<a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> objects with a <tt class="docutils literal"><span class="pre">pos</span></tt> attribute are dispatched only to
+<tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt> objects with a <tt class="docutils literal"><span class="pre">pos</span></tt> attribute are dispatched only to
 <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> objects in that position.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">This special naming convention is all-inclusive; <em>any</em> <a class="reference internal" href="#layout.Event" title="layout.Event"><tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt></a> with
+<p class="last">This special naming convention is all-inclusive; <em>any</em> <tt class="xref py py-class docutils literal"><span class="pre">Event</span></tt> with
 a <tt class="docutils literal"><span class="pre">pos</span></tt> attribute will be propagated thusly, and any without a <tt class="docutils literal"><span class="pre">pos</span></tt>
 attribute will simply propagate to all children, as usual. This means you
 can use the same behavior in your position-sensitive events, as well.</p>
@@ -429,7 +366,8 @@ attributes in derived classes.</p>
 <dl class="class">
 <dt id="layout.Label">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Label</tt><big>(</big><em>xcell</em>, <em>ycell</em>, <em>text=''</em>, <em>align=0</em>, <em>font=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Label" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="#layout.Label" title="layout.Label"><tt class="xref py py-class docutils literal"><span class="pre">Label</span></tt></a> is a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> designed to display text.</p>
+<dd><p>Bases: <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">layout.Widget</span></tt></a></p>
+<p>The <a class="reference internal" href="#layout.Label" title="layout.Label"><tt class="xref py py-class docutils literal"><span class="pre">Label</span></tt></a> is a <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a> designed to display text.</p>
 <p>Since this function is useful to some other <a class="reference internal" href="#layout.Widget" title="layout.Widget"><tt class="xref py py-class docutils literal"><span class="pre">Widget</span></tt></a>s, it&#8217;s also the
 base class for a few.</p>
 <dl class="attribute">
@@ -519,7 +457,8 @@ has an alpha value of 0.</p>
 <dl class="class">
 <dt id="layout.Slider">
 <em class="property">class </em><tt class="descclassname">layout.</tt><tt class="descname">Slider</tt><big>(</big><em>xcell</em>, <em>ycell</em>, <em>value=0</em>, <em>min=0</em>, <em>max=1</em>, <em>mapfunc=None</em>, <em>showval=True</em>, <em>orient=0</em>, <em>hwidth=0.05</em>, <em>hcol=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/layout.html#Slider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#layout.Slider" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#layout.Slider" title="layout.Slider"><tt class="xref py py-class docutils literal"><span class="pre">Slider</span></tt></a> is a type of widget that allows a user to manipulate a
+<dd><p>Bases: <a class="reference internal" href="#layout.Label" title="layout.Label"><tt class="xref py py-class docutils literal"><span class="pre">layout.Label</span></tt></a></p>
+<p>A <a class="reference internal" href="#layout.Slider" title="layout.Slider"><tt class="xref py py-class docutils literal"><span class="pre">Slider</span></tt></a> is a type of widget that allows a user to manipulate a
 value by providing an axis between two extreme values; the user is expected to
 use the mouse to select the value as a point within this range; the value is
 readable as the <a class="reference internal" href="#layout.Slider.value" title="layout.Slider.value"><tt class="xref py py-attr docutils literal"><span class="pre">value</span></tt></a> attribute.</p>
