@@ -14,6 +14,7 @@ from OpenGL.GL import *
 
 from vmath import Vector
 from scenegraph import Renderable, Texture
+from event import EVENT, KBD, MOUSE
 
 class LayoutCell(object):
 	'''A :class:`LayoutCell` represents a single cell in a layout facility. In
@@ -89,6 +90,19 @@ given.'''
 		'''Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` as
 specified by the ``x`` and ``y`` parameters.'''
 		return self.cols[x], self.rows[y]
+	def CellsAt(self, pos):
+		'''Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` that
+represents the cell pair at the given position in the layout held by this
+:class:`Grid`. This may be used for various sorts of hit-testing.'''
+		xcell=None
+		ycell=None
+		for cell in self.cols:
+			if pos.x>=cell.offset and pos.x<cell.offset+cell.size:
+				xcell=cell
+		for cell in self.rows:
+			if pos.y>=cell.offset and pos.y<cell.offset+cell.size:
+				ycell=cell
+		return xcell, ycell
 
 class Widget(Renderable):
 	'''A :class:`Widget` is a special type of :class:`scenegraph.Renderable`
@@ -185,23 +199,10 @@ or it may just set a viewport as with the usual :func:`Widget.PushState`.'''
 		'''Render the :class:`Container` (which actually does nothing but
 renders its children via :func:`scenegraph.Renderable.RenderChildren`.'''
 		self.RenderChildren()
-	def CellsAt(self, pos):
-		'''Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` that
-represents the cell pair at the given position in the layout held by this
-:class:`Container`. This may be used for various sorts of hit-testing.'''
-		xcell=None
-		ycell=None
-		for cell in self.grid.cols:
-			if pos.x>=cell.offset and pos.x<cell.offset+cell.size:
-				xcell=cell
-		for cell in self.grid.rows:
-			if pos.y>=cell.offset and pos.y<cell.offset+cell.size:
-				ycell=cell
-		return xcell, ycell
 	def ChildAt(self, pos):
 		'''Returns a :class:`Widget` at the position specified, if one exists
 there; otherwise, returns ``None``.'''
-		xc, yc=self.CellAt(pos)
+		xc, yc=self.grid.CellsAt(pos)
 		if xc is None or yc is None:
 			return None
 		for child in self.children:
@@ -222,9 +223,13 @@ there; otherwise, returns ``None``.'''
 		if hasattr(ev, 'pos'):
 			child=self.ChildAt(ev.pos)
 			if child is not None:
+##				print 'Pre event prop:', ev.pos
+				ev.pos-=child.pos #Relative coordinate
+##				print 'Child pos:', child.pos
+##				print 'Post event prop:', ev.pos
 				child.Trigger(ev)
 		else:
-			super(Container, self).TriggerChildren()
+			super(Container, self).TriggerChildren(ev)
 
 class ALIGN:
 	'''An enumeration class of legal values for :attr:`Label.align` and similar
@@ -314,16 +319,7 @@ base class for a few.'''
 			self.RenderText()
 		glPopAttrib()
 	def RenderText(self):
-		'''Renders the text--a process which is usable by subclasses as needed.
-
-.. warning::
-
-	While GL_ENABLE_BIT is pushed before rendering, GL_TEXTURE_2D is still
-	generally enabled after this process. You'll want to disable it before
-	doing your own rendering after calling this, as the 0, 0 texel generally
-	has an alpha value of 0.
-
-	This is a known bug and will be fixed.'''
+		'''Renders the text--a process which is usable by subclasses as needed.'''
 		glPushAttrib(GL_ENABLE_BIT)
 		tsz=Vector(*self.tex.surf.get_size())
 		vsz=Vector(*(glGetIntegerv(GL_VIEWPORT)[2:]))
@@ -425,10 +421,12 @@ should probably be used instead.'''
 		if hcol is None:
 			hcol=Vector(0.5, 0.5, 0.5, 0.5)
 		glColor4d(*hcol.FastTo4())
-		glDisable(GL_TEXTURE_2D) #XXX From .RenderText; might need to do more than just push GL_ENABLE_BIT
 		pos=self.ratio*2-1
 		if self.orient==ORIENT.HORIZONTAL:
 			glRectdv((pos-self.hwidth, -1), (pos+self.hwidth, 1))
 		else:
 			glRectdv((-1, pos-self.hwidth), (1, pos+self.hwidth))
 		glPopAttrib()
+	def Handle(self, ev):
+		if ev.type==EVENT.MOUSE and ev.subtype==MOUSE.MOVE and ev.buttons[0]:
+			print 'Mouse down move at pos', ev.pos

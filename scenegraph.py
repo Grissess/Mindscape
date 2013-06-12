@@ -260,7 +260,6 @@ texture parameters.
 		glFlush()
 	def Apply(self):
 		'''Bind the texture such that it is available for the next rendering operation.'''
-		glEnable(GL_TEXTURE_2D)
 		glBindTexture(GL_TEXTURE_2D, self.id)
 	def Revert(self):
 		'''Does nothing.

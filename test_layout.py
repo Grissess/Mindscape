@@ -7,6 +7,7 @@ from OpenGL.GL import *
 from vmath import Vector, Matrix
 from scenegraph import *
 from layout import *
+from event import Event
 
 pygame.init()
 
@@ -67,6 +68,8 @@ while True:
 	for ev in pygame.event.get():
 		if ev.type==QUIT or (ev.type==KEYDOWN and ev.key==K_ESCAPE):
 			exit()
+		for ev in Event.FromPygame(ev):
+			sc.Trigger(ev)
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 	mesh.transform.rot[0]+=1
 	if mesh.transform.rot[0]>=360:

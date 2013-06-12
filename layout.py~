@@ -14,6 +14,7 @@ from OpenGL.GL import *
 
 from vmath import Vector
 from scenegraph import Renderable, Texture
+from event import EVENT, KBD, MOUSE
 
 class LayoutCell(object):
 	'''A :class:`LayoutCell` represents a single cell in a layout facility. In
@@ -89,26 +90,19 @@ given.'''
 		'''Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` as
 specified by the ``x`` and ``y`` parameters.'''
 		return self.cols[x], self.rows[y]
-
-class EVENT:
-	'''An enumeration containing valid values for :attr:`Event.type`.'''
-	#: An event relating to the keyboard (key down, key up, character, ...)
-	KBD=1
-	#: An event relating to the mouse (button press, release, mouse move, ...)
-	MOUSE=2
-
-class Event(object):
-	'''An :class:`Event` contains all of the information needed to pass an
-event to a system which uses events.
-
-Events may be given arbitrary attributes from the keyword arguments passed to
-the constructor. A later ``type=...`` in the keyword arguments will override
-the specified event type given as a positional parameter, if one is provided.'''
-	def __init__(self, type, **kwargs):
-		#: The event type (one of the :class:`EVENT` values). Other attributes depend on the event.
-		self.type=type
-		for k, v in kwargs.iteritems():
-			setattr(self, k , v)
+	def CellsAt(self, pos):
+		'''Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` that
+represents the cell pair at the given position in the layout held by this
+:class:`Grid`. This may be used for various sorts of hit-testing.'''
+		xcell=None
+		ycell=None
+		for cell in self.cols:
+			if pos.x>=cell.offset and pos.x<cell.offset+cell.size:
+				xcell=cell
+		for cell in self.rows:
+			if pos.y>=cell.offset and pos.y<cell.offset+cell.size:
+				ycell=cell
+		return xcell, ycell
 
 class Widget(Renderable):
 	'''A :class:`Widget` is a special type of :class:`scenegraph.Renderable`
@@ -160,33 +154,6 @@ layout axes.'''
 	def PopState(self):
 		'''Reset the state (basically, pop the viewport).'''
 		glPopAttrib()
-	def Trigger(self, ev):
-		'''Trigger an :class:`Event`.
-
-.. note::
-
-	Triggering an :class:`Event` is not the same as handling an event; triggering
-	will inevitably cause handling by this :class:`Widget`, and may cause handling
-	by children (based on the propagation policy--how the :class:`Widget` defines
-	:func:`TriggerChildren`. Handling the :class:`Event` is done by :func:`Handle`,
-	which actually causes the :class:`Widget` to process the event.'''
-		self.Handle(ev)
-		self.TriggerChildren(ev)
-	def Handle(self, ev):
-		'''Hanle an :class:`Event`. By default, this does nothing.
-
-.. note::
-
-	See :func:`Trigger`.'''
-		pass
-	def TriggerChildren(self, ev):
-		'''Propagate an :class:`Event` to child :class:`Widget`\ s.
-
-.. note::
-
-	See :func:`Trigger`.'''
-		for child in self.children:
-			child.Trigger(ev)
 
 class Container(Widget):
 	'''A :class:`Container` is a :class:`Widget` that contains other :class:`Widget`\ s.
@@ -232,23 +199,10 @@ or it may just set a viewport as with the usual :func:`Widget.PushState`.'''
 		'''Render the :class:`Container` (which actually does nothing but
 renders its children via :func:`scenegraph.Renderable.RenderChildren`.'''
 		self.RenderChildren()
-	def CellsAt(self, pos):
-		'''Returns a tuple ``(:class:`LayoutCell`, :class:`LayoutCell`)`` that
-represents the cell pair at the given position in the layout held by this
-:class:`Container`. This may be used for various sorts of hit-testing.'''
-		xcell=None
-		ycell=None
-		for cell in self.grid.cols:
-			if pos.x>=cell.offset and pos.x<cell.offset+cell.size:
-				xcell=cell
-		for cell in self.grid.rows:
-			if pos.y>=cell.offset and pos.y<cell.offset+cell.size:
-				ycell=cell
-		return xcell, ycell
 	def ChildAt(self, pos):
 		'''Returns a :class:`Widget` at the position specified, if one exists
 there; otherwise, returns ``None``.'''
-		xc, yc=self.CellAt(pos)
+		xc, yc=self.grid.CellsAt(pos)
 		if xc is None or yc is None:
 			return None
 		for child in self.children:
@@ -269,9 +223,13 @@ there; otherwise, returns ``None``.'''
 		if hasattr(ev, 'pos'):
 			child=self.ChildAt(ev.pos)
 			if child is not None:
+##				print 'Pre event prop:', ev.pos
+				ev.pos-=child.pos #Relative coordinate
+##				print 'Child pos:', child.pos
+##				print 'Post event prop:', ev.pos
 				child.Trigger(ev)
 		else:
-			super(Container, self).TriggerChildren()
+			super(Container, self).TriggerChildren(ev)
 
 class ALIGN:
 	'''An enumeration class of legal values for :attr:`Label.align` and similar
@@ -370,7 +328,9 @@ base class for a few.'''
 	doing your own rendering after calling this, as the 0, 0 texel generally
 	has an alpha value of 0.
 
-	This is a known bug and will be fixed.'''
+	This is a known bug and will be fixed.
+
+	Duct tape: GL_TEXTURE_2D is disabled before return.'''
 		glPushAttrib(GL_ENABLE_BIT)
 		tsz=Vector(*self.tex.surf.get_size())
 		vsz=Vector(*(glGetIntegerv(GL_VIEWPORT)[2:]))
@@ -405,6 +365,7 @@ base class for a few.'''
 		glTexCoord2d(0, 1)
 		glVertex2d(minima.x, maxima.y)
 		glEnd()
+		glDisable(GL_TEXTURE_2D)
 		glPopAttrib()
 
 class ORIENT:
@@ -468,14 +429,17 @@ should probably be used instead.'''
 			self.text=str(self.value)
 			self.Update()
 			self.RenderText()
+			glDisable(GL_TEXTURE_2D)
 		hcol=self.hcol
 		if hcol is None:
 			hcol=Vector(0.5, 0.5, 0.5, 0.5)
 		glColor4d(*hcol.FastTo4())
-		glDisable(GL_TEXTURE_2D) #XXX From .RenderText; might need to do more than just push GL_ENABLE_BIT
 		pos=self.ratio*2-1
 		if self.orient==ORIENT.HORIZONTAL:
 			glRectdv((pos-self.hwidth, -1), (pos+self.hwidth, 1))
 		else:
 			glRectdv((-1, pos-self.hwidth), (1, pos+self.hwidth))
 		glPopAttrib()
+	def Handle(self, ev):
+		if ev.type==EVENT.MOUSE and ev.subtype==MOUSE.MOVE and ev.buttons[0]:
+			print 'Mouse down move at pos', ev.pos

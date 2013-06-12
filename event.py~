@@ -7,6 +7,11 @@ This module defines events that may be used anywhere that an event-driven
 system is required.
 '''
 
+import pygame
+from pygame.locals import *
+
+from vmath import Vector
+
 class EVENT:
 	'''An enumeration containing valid values for :attr:`Event.type`.'''
 	#: An event relating to the keyboard (key down, key up, character, ...)
@@ -29,7 +34,7 @@ class KBD:
 	#:    enough to start auto-repeating), or not at all (such as if the key
 	#:    is a non-printable, like a modifier key or an F-key). In general, if
 	#:    you're interested in what the user is typing, hook :attr:`CHAR`;
-	#;    otherwise, if you're interested in the state of the keyboard, hook
+	#:    otherwise, if you're interested in the state of the keyboard, hook
 	#:    :attr:`KEYDOWN` and :attr:`KEYUP`.
 	CHAR=3
 
@@ -69,6 +74,22 @@ the specified event type given as a positional parameter, if one is provided.'''
 		self.type=type
 		for k, v in kwargs.iteritems():
 			setattr(self, k , v)
+	@classmethod
+	def FromPygame(cls, ev):
+##		print 'Processing event:', ev
+		if ev.type==KEYDOWN:
+			yield cls(EVENT.KBD, subtype=KBD.KEYDOWN, key=ev.key)
+			if ev.unicode:
+				yield cls(EVENT.KBD, subtype=KBD.CHAR, char=ev.unicode)
+		elif ev.type==KEYUP:
+			yield cls(EVENT.KBD, subtype=KBD.KEYUP, key=ev.key)
+		elif ev.type==MOUSEMOTION:
+			height=pygame.display.get_surface().get_height()
+			yield cls(EVENT.MOUSE, subtype=MOUSE.MOVE, pos=Vector(ev.pos[0], height-ev.pos[1]), rel=Vector(ev.rel[0], -ev.rel[1]), buttons=ev.buttons)
+		elif ev.type==MOUSEBUTTONDOWN:
+			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONDOWN, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button)
+		elif ev.type==MOUSEBUTTONUP:
+			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONUP, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button)
 
 class EventHandler(object):
 	def Trigger(self, ev):
