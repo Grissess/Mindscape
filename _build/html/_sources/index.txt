@@ -13,6 +13,7 @@ The documentation is divided into various sections for respective audiences; fee
 .. toctree::
    :maxdepth: 2
 
+   doc/guide/index
    doc/src/index
 
 Indices and tables

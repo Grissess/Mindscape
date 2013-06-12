@@ -6,12 +6,14 @@
 Welcome to Mindscape's documentation!
 =====================================
 
-Contents:
+Mindscape is a game engine designed to be simple and lightweight, but fast and powerful. It was designed for the express purpose of implementing the game of the same name.
+
+The documentation is divided into various sections for respective audiences; feel free to choose one of the following
 
 .. toctree::
    :maxdepth: 2
 
-
+   doc/src/index
 
 Indices and tables
 ==================
