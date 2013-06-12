@@ -87,9 +87,11 @@ the specified event type given as a positional parameter, if one is provided.'''
 			height=pygame.display.get_surface().get_height()
 			yield cls(EVENT.MOUSE, subtype=MOUSE.MOVE, pos=Vector(ev.pos[0], height-ev.pos[1]), rel=Vector(ev.rel[0], -ev.rel[1]), buttons=ev.buttons)
 		elif ev.type==MOUSEBUTTONDOWN:
+			pygame.event.set_grab(True)
 			height=pygame.display.get_surface().get_height()
 			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONDOWN, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button)
 		elif ev.type==MOUSEBUTTONUP:
+			pygame.event.set_grab(False)
 			height=pygame.display.get_surface().get_height()
 			yield cls(EVENT.MOUSE, subtype=MOUSE.BUTTONUP, pos=Vector(ev.pos[0], height-ev.pos[1]), button=ev.button)
 

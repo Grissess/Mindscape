@@ -10,6 +10,7 @@ which means that it deals with :class:`Grid`\ s.
 '''
 
 import pygame
+from pygame.locals import *
 from OpenGL.GL import *
 
 from vmath import Vector
@@ -169,7 +170,17 @@ that are in this layout system as children of the :class:`Container`. Other
 due to the odd circumstances under which :class:`Widget`\ s are rendered.'''
 	def __init__(self, grid, xcell=None, ycell=None, **kwargs):
 		super(Container, self).__init__(xcell, ycell, **kwargs)
+		#: The :class:`Grid` representing the layout.
 		self.grid=grid
+		#: A :class:`Widget` that will receive all :attr:`event.EVENT.KBD` events, or ``None`` if they are to propagate normally (to all children).
+		self.focus=None
+		#: A :class:`Widget` that will receive all :attr:`event.EVENT.MOUSE` events, or ``None`` if they are to propagate normally (by position).
+		#:
+		#: .. note::
+		#:
+		#:    Events thusly grabbed are still in the :class:`Widget`'s local coordinate space.
+		#:    This means you may see negative values.
+		self.grab=None
 	def PushState(self):
 		'''Initialize the state. Depending on whether this is a top-level
 container, this may initialize the matrices (without affecting the viewport),
@@ -212,7 +223,8 @@ there; otherwise, returns ``None``.'''
 	def TriggerChildren(self, ev):
 		'''Overrides the default propagation behavior by ensuring that
 :class:`Event` objects with a ``pos`` attribute are dispatched only to
-:class:`Widget` objects in that position.
+:class:`Widget` objects in that position, as well as obeying the :attr:`focus`
+and :attr:`grab` attributes, if they are set.
 
 .. note::
 
@@ -220,6 +232,12 @@ there; otherwise, returns ``None``.'''
 	a ``pos`` attribute will be propagated thusly, and any without a ``pos``
 	attribute will simply propagate to all children, as usual. This means you
 	can use the same behavior in your position-sensitive events, as well.'''
+		if ev.type==EVENT.MOUSE and self.grab is not None:
+			self.grab.Trigger(ev)
+			return
+		if ev.type==EVENT.KBD and self.focus is not None:
+			self.focus.Trigger(ev)
+			return
 		if hasattr(ev, 'pos'):
 			child=self.ChildAt(ev.pos)
 			if child is not None:
@@ -230,6 +248,23 @@ there; otherwise, returns ``None``.'''
 				child.Trigger(ev)
 		else:
 			super(Container, self).TriggerChildren(ev)
+	def SetFocus(self, focus=None):
+		'''Sets the :attr:`focus` attribute.
+
+.. note::
+
+	You should call this instead of setting the attribute directly, as doing that
+	will silently fail if the :class:`Widget` is not a :class:`Container`--which
+	can lead to unexpected behavior. Using this invalidly will instead raise an
+	AttributeError--which will help with debugging!'''
+		self.focus=focus
+	def SetGrab(self, grab=None):
+		'''Sets the :attr:`grab` attribute.
+
+.. note::
+
+	See :func:`SetFocus`.'''
+		self.grab=grab
 
 class ALIGN:
 	'''An enumeration class of legal values for :attr:`Label.align` and similar
@@ -368,7 +403,7 @@ class Slider(Label):
 value by providing an axis between two extreme values; the user is expected to
 use the mouse to select the value as a point within this range; the value is
 readable as the :attr:`value` attribute.'''
-	def __init__(self, xcell, ycell, value=0, min=0, max=1, mapfunc=None, showval=True, orient=ORIENT.HORIZONTAL, hwidth=0.05, hcol=None, **kwargs):
+	def __init__(self, xcell, ycell, value=0, min=0, max=1, mapfunc=None, showval=True, orient=ORIENT.HORIZONTAL, hwidth=0.05, hcol=None, kmove=0.05, **kwargs):
 		super(Slider, self).__init__(xcell, ycell, **kwargs)
 		#: The actual value of this :class:`Slider`, as modified by the user (and possibly mapped by :attr:`mapfunc`).
 		self.value=value
@@ -387,6 +422,8 @@ readable as the :attr:`value` attribute.'''
 		self.hwidth=hwidth
 		#: A 4D :class:`vmath.Vector` color of the slide handle (or ``None`` for the default transparent gray).
 		self.hcol=hcol
+		#: A floating-point in the range [0, 1] specifying how much a keypress should change the value (as a fraction of the entire range).
+		self.kmove=kmove
 	@property
 	def range(self):
 		'''The computed difference between :attr:`max` and :attr:`min`.'''
@@ -399,6 +436,16 @@ is 0 and the maximal point is 1.'''
 	def Map(self, n):
 		'''Maps a value ``n`` in the range [0, 1] to a value between [min, max].'''
 		return (n*self.range)+self.min
+	def ClampValue(self):
+		'''Clamps :attr:`value` to the range [:attr:`min`, :attr:`max`].
+
+.. note::
+
+	If [min, max] is an invalid interval, the value is always set to :attr:`max`.'''
+		if self.value<self.min:
+			self.value=self.min
+		if self.value>self.max:
+			self.value=self.max
 	@staticmethod
 	def Step(n):
 		'''Produces a lambda function that may be used as a value for :attr:`mapfunc`.
@@ -431,9 +478,26 @@ should probably be used instead.'''
 			glRectdv((-1, pos-self.hwidth), (1, pos+self.hwidth))
 		glPopAttrib()
 	def Handle(self, ev):
-		if ev.type==EVENT.MOUSE and ev.subtype==MOUSE.MOVE and ev.buttons[0]:
-			if self.orient==ORIENT.HORIZONTAL:
-				ratio=ev.pos.x/self.size.x
-			else:
-				ratio=ev.pos.y/self.size.y
-			self.value=self.Map(ratio)
+		if ev.type==EVENT.MOUSE:
+			if ev.subtype==MOUSE.BUTTONDOWN and ev.button==0:
+				self.parent.SetGrab(self)
+				self.parent.SetFocus(self)
+			elif ev.subtype==MOUSE.MOVE and ev.buttons[0]:
+				if self.orient==ORIENT.HORIZONTAL:
+					ratio=ev.pos.x/self.size.x
+				else:
+					ratio=ev.pos.y/self.size.y
+				self.value=self.Map(ratio)
+				self.ClampValue()
+			elif ev.subtype==MOUSE.BUTTONUP and ev.button==0:
+				self.parent.SetGrab()
+		elif ev.type==EVENT.KBD:
+			if ev.subtype==KBD.KEYDOWN:
+				delta=0
+				if ev.key in (K_RIGHT, K_UP):
+					delta=self.range*self.kmove
+				elif ev.key in (K_LEFT, K_DOWN):
+					delta=self.range*-self.kmove
+				if delta:
+					self.value+=delta
+					self.ClampValue()
