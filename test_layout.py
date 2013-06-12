@@ -74,9 +74,9 @@ while True:
 	mesh.transform.rot[0]+=1
 	if mesh.transform.rot[0]>=360:
 		mesh.transform.rot[0]-=360
-	sld.value+=0.02
-	if sld.value>1:
-		sld.value=0
+##	sld.value+=0.02
+##	if sld.value>1:
+##		sld.value=0
 	with sc:
 		sc.Render()
 	pygame.display.flip()

@@ -396,6 +396,9 @@ readable as the :attr:`value` attribute.'''
 		'''The position of :attr:`value` normalized such that the minimal point
 is 0 and the maximal point is 1.'''
 		return (self.value-self.min)/self.range
+	def Map(self, n):
+		'''Maps a value ``n`` in the range [0, 1] to a value between [min, max].'''
+		return (n*self.range)+self.min
 	@staticmethod
 	def Step(n):
 		'''Produces a lambda function that may be used as a value for :attr:`mapfunc`.
@@ -429,4 +432,8 @@ should probably be used instead.'''
 		glPopAttrib()
 	def Handle(self, ev):
 		if ev.type==EVENT.MOUSE and ev.subtype==MOUSE.MOVE and ev.buttons[0]:
-			print 'Mouse down move at pos', ev.pos
+			if self.orient==ORIENT.HORIZONTAL:
+				ratio=ev.pos.x/self.size.x
+			else:
+				ratio=ev.pos.y/self.size.y
+			self.value=self.Map(ratio)

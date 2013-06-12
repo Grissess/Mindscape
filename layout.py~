@@ -319,18 +319,7 @@ base class for a few.'''
 			self.RenderText()
 		glPopAttrib()
 	def RenderText(self):
-		'''Renders the text--a process which is usable by subclasses as needed.
-
-.. warning::
-
-	While GL_ENABLE_BIT is pushed before rendering, GL_TEXTURE_2D is still
-	generally enabled after this process. You'll want to disable it before
-	doing your own rendering after calling this, as the 0, 0 texel generally
-	has an alpha value of 0.
-
-	This is a known bug and will be fixed.
-
-	Duct tape: GL_TEXTURE_2D is disabled before return.'''
+		'''Renders the text--a process which is usable by subclasses as needed.'''
 		glPushAttrib(GL_ENABLE_BIT)
 		tsz=Vector(*self.tex.surf.get_size())
 		vsz=Vector(*(glGetIntegerv(GL_VIEWPORT)[2:]))
@@ -365,7 +354,6 @@ base class for a few.'''
 		glTexCoord2d(0, 1)
 		glVertex2d(minima.x, maxima.y)
 		glEnd()
-		glDisable(GL_TEXTURE_2D)
 		glPopAttrib()
 
 class ORIENT:
@@ -408,6 +396,9 @@ readable as the :attr:`value` attribute.'''
 		'''The position of :attr:`value` normalized such that the minimal point
 is 0 and the maximal point is 1.'''
 		return (self.value-self.min)/self.range
+	def Map(self, n):
+		'''Maps a value ``n`` in the range [0, 1] to a value between [min, max].'''
+		return (n*self.range)+self.min
 	@staticmethod
 	def Step(n):
 		'''Produces a lambda function that may be used as a value for :attr:`mapfunc`.
@@ -429,7 +420,6 @@ should probably be used instead.'''
 			self.text=str(self.value)
 			self.Update()
 			self.RenderText()
-			glDisable(GL_TEXTURE_2D)
 		hcol=self.hcol
 		if hcol is None:
 			hcol=Vector(0.5, 0.5, 0.5, 0.5)
@@ -442,4 +432,8 @@ should probably be used instead.'''
 		glPopAttrib()
 	def Handle(self, ev):
 		if ev.type==EVENT.MOUSE and ev.subtype==MOUSE.MOVE and ev.buttons[0]:
-			print 'Mouse down move at pos', ev.pos
+			if self.orient=ORIENT.HORIZONTAL:
+				ratio=ev.pos.x/self.size.x
+			else:
+				ratio=ev.pos.y/self.size.y
+			self.value=self.Map(ratio)
