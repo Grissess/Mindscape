@@ -123,7 +123,7 @@ the :class:`vmath.Matrix` given.'''
 		self.matrix=matrix
 	def Apply(self):
 		'''Apply the transformation to the current matrix.'''
-		glMultMatrixd(*numpy.array(self.matrix.flatten())[0])
+		glMultMatrixd(*numpy.array(self.matrix.transpose().flatten())[0])
 
 class ModBlendFunc(Modification):
 	'''This is a simple :class:`Modification` which changes the current GL
