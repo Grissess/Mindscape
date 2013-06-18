@@ -62,12 +62,14 @@ class Body(object):
 		self.body=ode.Body(env.world)
 	def _get_mass(self):
 		return self.body.getMass()
-	def _set_mass(self):
-
+	def _set_mass(self, mass):
+		self.body.setMass(mass.mass)
 
 class Geometry(object):
 	def Attach(self, body):
-
+		self.geom.setBody(body.body)
+	def BuildMass(self, density, absolute=False):
+		raise NotImplementedError('Geometry derivative must define .BuildMass()')
 
 class Mesh(Geometry):
 	def __init__(self, env, mesh):
@@ -102,3 +104,17 @@ class Sphere(Geometry):
 	def _set_radius(self, rad):
 		return self.geom.setRadius(rad)
 	radius=property(_get_radius, _set_radius)
+	def BuildMass(self, density, absolute=False):
+		return Mass.Sphere(density, self.radius, absolute)
+
+class Box(Geometry):
+	def __init__(self, env, dims):
+		self.env=env
+		self.geom=ode.GeomBox(env.space, tuple(dims.FastTo3()))
+	def _get_dims(self):
+		return Vector(*self.geom.getLengths())
+	def _set_dims(self, dims):
+		self.geom.setLengths(tuple(dims.FastTo3()))
+	dims=property(_get_dims, _set_dims)
+	def BuildMass(self, density, absolute=False):
+		return Mass.Box(density, self.dims, absolute)

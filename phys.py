@@ -18,21 +18,30 @@ class STYPE:
 	QTREE=2
 	HASH=3
 
+class SIM:
+	NORMAL=0
+	QUICK=1
+
 class Environment(object):
 	SPACE_MAP={STYPE.SIMPLE: ode.SimpleSpace,
 			   STYPE.QTREE: ode.QuadTreeSpace,
 			   STYPE.HASH: ode.HashSpace}
-	def __init__(self, stype=STYPE.QTREE, gravity=None):
+	SIM_MAP={SIM.NORMAL: ode.World.step,
+			 SIM.QUICK: ode.World.quickStep}
+	def __init__(self, stype=STYPE.QTREE, gravity=None, sim=SIM.NORMAL):
 		self.world=ode.World()
 		if gravity is not None:
 			self.world.setGravity(tuple(gravity))
 		self.space=self.SPACE_MAP[stype]()
 		self.contactgroup=ode.JointGroup()
+		self.sim=sim
 	def _get_gravity(self):
 		return Vector(*self.world.getGravity())
 	def _set_gravity(self, grav):
 		self.world.setGravity(tuple(grav))
 	gravity=property(_get_gravity, _set_gravity)
+	def Step(self, size):
+		self.SIM_MAP[self.sim](self.world, size)
 
 class Mass(object):
 	def __init__(self, mass):
@@ -67,7 +76,9 @@ class Body(object):
 
 class Geometry(object):
 	def Attach(self, body):
-
+		self.geom.setBody(body.body)
+	def BuildMass(self, density, absolute=False):
+		raise NotImplementedError('Geometry derivative must define .BuildMass()')
 
 class Mesh(Geometry):
 	def __init__(self, env, mesh):
@@ -102,3 +113,17 @@ class Sphere(Geometry):
 	def _set_radius(self, rad):
 		return self.geom.setRadius(rad)
 	radius=property(_get_radius, _set_radius)
+	def BuildMass(self, density, absolute=False):
+		return Mass.Sphere(density, self.radius, absolute)
+
+class Box(Geometry):
+	def __init__(self, env, dims):
+		self.env=env
+		self.geom=ode.GeomBox(env.space, tuple(dims.FastTo3()))
+	def _get_dims(self):
+		return Vector(*self.geom.getLengths())
+	def _set_dims(self, dims):
+		self.geom.setLengths(tuple(dims.FastTo3()))
+	dims=property(_get_dims, _set_dims)
+	def BuildMass(self, density, absolute=False):
+		return Mass.Box(density, self.dims, absolute)
